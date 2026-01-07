@@ -1,0 +1,51 @@
+# KingSick Docker Compose Development Configuration
+# Use: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Hot reload and development-friendly configuration
+
+services:
+  # Frontend - Development mode with hot reload
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_WS_URL=ws://localhost:8000/ws
+      - NEXT_PUBLIC_APP_NAME=KingSick
+      - NEXT_PUBLIC_APP_ENV=development
+      - WATCHPACK_POLLING=true
+    command: npm run dev
+
+  # Backend - Development mode with auto-reload
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend:/app
+    environment:
+      - DEBUG=true
+      - ENVIRONMENT=development
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Scheduler - Disabled in development by default
+  scheduler:
+    profiles:
+      - scheduler
+    environment:
+      - DEBUG=true
+      - ENVIRONMENT=development
+
+  # Database - Expose port for local access
+  db:
+    ports:
+      - "5432:5432"
+
+  # Redis - Expose port for local access
+  redis:
+    ports:
+      - "6379:6379"

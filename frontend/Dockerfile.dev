@@ -1,0 +1,25 @@
+# KingSick Frontend Development Dockerfile
+# Next.js with hot reload support
+
+FROM node:20-alpine
+
+# Install libc6-compat for alpine compatibility
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install dependencies
+RUN npm ci
+
+# Set environment variables
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Expose port
+EXPOSE 3000
+
+# Run in development mode (default command, can be overridden)
+CMD ["npm", "run", "dev"]
