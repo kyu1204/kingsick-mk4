@@ -52,6 +52,12 @@ class Settings(BaseSettings):
     # API settings
     api_v1_prefix: str = "/api/v1"
 
+    # KIS API settings
+    kis_app_key: str = ""
+    kis_app_secret: str = ""
+    kis_account_no: str = ""
+    kis_is_mock: bool = True
+
 
 @lru_cache
 def get_settings() -> Settings:

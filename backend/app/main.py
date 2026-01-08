@@ -8,6 +8,10 @@ health check endpoints, and API router mounting.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.indicators import router as indicators_router
+from app.api.positions import router as positions_router
+from app.api.signals import router as signals_router
+from app.api.trading import router as trading_router
 from app.config import get_settings
 
 settings = get_settings()
@@ -58,3 +62,10 @@ async def health_check() -> dict[str, str]:
         "app": settings.app_name,
         "environment": settings.environment,
     }
+
+
+# Include API routers with /api/v1 prefix
+app.include_router(indicators_router, prefix="/api/v1")
+app.include_router(positions_router, prefix="/api/v1")
+app.include_router(signals_router, prefix="/api/v1")
+app.include_router(trading_router, prefix="/api/v1")

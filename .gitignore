@@ -121,3 +121,4 @@ temp/
 *.tmp
 *.temp
 *.bak
+.serena/

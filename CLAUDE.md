@@ -40,39 +40,53 @@ kingsick/
 
 ## Development Commands
 
-### Backend (Python)
+### Backend (Python with uv)
 ```bash
 cd backend
-pip install -r requirements.txt
+
+# Install dependencies (uv - fast Python package manager)
+uv sync --all-extras          # Install all dependencies including dev
+uv sync                       # Install production dependencies only
 
 # Run server
-uvicorn app.main:app --reload --port 8000
+uv run uvicorn app.main:app --reload --port 8000
 
 # Run tests
-pytest tests/unit -v --cov=app
-pytest tests/integration -v
-pytest tests/e2e -v
+uv run pytest tests/unit -v                    # Run unit tests
+uv run pytest tests/integration -v             # Run integration tests
+uv run pytest tests/e2e -v                     # Run e2e tests
+uv run pytest tests/unit/test_indicator.py -v  # Run single test file
+uv run pytest tests/ --cov=app --cov-report=html  # With coverage report
 
-# Run single test file
-pytest tests/unit/test_indicator.py -v
+# Linting & Formatting (ruff - fast Python linter)
+uv run ruff check .           # Check for linting errors
+uv run ruff check . --fix     # Auto-fix linting errors
+uv run ruff format .          # Format code
 
-# Run with coverage report
-pytest tests/ --cov=app --cov-report=html
+# Type checking
+uv run mypy app/              # Run type checker
 ```
 
 ### Frontend (Node.js)
 ```bash
 cd frontend
-npm install
+npm install                    # Install dependencies
 
 # Run dev server
-npm run dev
+npm run dev                    # Start development server (port 3000)
+npm run build                  # Production build
+npm run start                  # Start production server
 
-# Run tests
-npm run test
-npm run test -- --coverage
+# Run tests (Vitest)
+npm run test                   # Run tests in watch mode
+npm run test:coverage          # Run tests with coverage report
+npm run test:ui                # Run tests with UI
 
-# E2E tests
+# Linting & Type checking
+npm run lint                   # Run ESLint
+npx tsc --noEmit               # Type check without emitting
+
+# E2E tests (Playwright - to be configured)
 npx playwright install
 npm run test:e2e
 ```
@@ -134,3 +148,66 @@ SLACK_WEBHOOK_URL=
 ## Language
 
 All code comments, variable names, and technical documentation should be in English. User-facing content and design documents may be in Korean.
+
+## Phase 완료 검증 가이드라인
+
+### 1. Task 완료 ≠ Phase 완료
+
+**단위 테스트 통과만으로 기능 완료로 판단하지 말 것.**
+
+각 Task는 반드시 다음을 포함해야 함:
+- 서비스 로직 구현
+- API 라우터 연결 (HTTP 엔드포인트 노출)
+- 통합 테스트 또는 E2E 테스트
+- Frontend 연동 (해당 시)
+
+### 2. Phase 완료 전 필수 체크리스트
+
+Phase를 완료로 선언하기 전 반드시 확인:
+
+- [ ] 모든 서비스가 API 엔드포인트로 노출되어 있는가?
+- [ ] `curl` 또는 API 클라이언트로 실제 호출이 가능한가?
+- [ ] Frontend에서 Backend API 호출이 동작하는가?
+- [ ] 설계 문서의 모든 요구사항이 **실제로 동작**하는가?
+- [ ] E2E 시나리오 테스트를 수행했는가?
+- [ ] **브라우저에서 직접 UI 테스트**를 수행했는가?
+
+### 2-1. 브라우저 직접 테스트 (필수)
+
+**curl/API 테스트만으로 충분하지 않음.** 실제 브라우저에서 UI가 정상 동작하는지 확인 필수.
+
+브라우저 테스트 체크리스트:
+- [ ] 페이지가 에러 없이 로드되는가?
+- [ ] API 호출이 네트워크 탭에서 확인되는가?
+- [ ] API 응답 데이터가 UI에 올바르게 표시되는가?
+- [ ] 사용자 인터랙션(클릭, 입력 등)이 동작하는가?
+- [ ] 에러 상태가 적절히 처리되는가? (로딩, 에러 메시지 등)
+
+테스트 방법:
+```bash
+# 1. 서버 시작
+cd backend && uv run uvicorn app.main:app --reload --port 8000
+cd frontend && npm run dev
+
+# 2. 브라우저에서 직접 확인 또는 Chrome MCP 도구 사용
+# - mcp__claude-in-chrome__navigate
+# - mcp__claude-in-chrome__computer (screenshot)
+# - mcp__claude-in-chrome__read_network_requests
+```
+
+### 3. Spec Reviewer 추가 검증 항목
+
+코드 리뷰 시 다음도 확인:
+
+- [ ] 구현된 기능이 외부에서 접근 가능한가?
+- [ ] API 엔드포인트가 올바르게 노출되어 있는가?
+- [ ] 서비스 간 통합이 실제로 동작하는가?
+
+### 4. 흔한 실수 방지
+
+| 실수 | 올바른 접근 |
+|------|------------|
+| 서비스만 구현하고 API 미연결 | Task에 "API 라우터 구현" 명시적 포함 |
+| 단위 테스트만 작성 | 통합/E2E 테스트도 필수 |
+| "테스트 통과 = 완료" 판단 | 실제 서버 기동 후 API 호출 검증 |
+| Phase 완료 후 다음 Phase 진행 | Phase 완료 체크리스트 먼저 확인 |
