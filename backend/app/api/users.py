@@ -10,10 +10,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.auth import get_current_user
 from app.database import get_db
 from app.models import User
+from app.models.user import UserApiKey
 from app.services.auth import hash_password, verify_password
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -61,16 +63,23 @@ class MessageResponse(BaseModel):
 @router.get("/me", response_model=UserProfileResponse)
 async def get_current_user_profile(
     current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
 ):
     """
     Get the current user's profile.
     """
+    # Check if user has API key using separate query to avoid lazy loading issues
+    result = await db.execute(
+        select(UserApiKey).where(UserApiKey.user_id == current_user.id)
+    )
+    has_api_key = result.scalar_one_or_none() is not None
+
     return UserProfileResponse(
         id=str(current_user.id),
         email=current_user.email,
         is_admin=current_user.is_admin,
         is_active=current_user.is_active,
-        has_api_key=current_user.api_key is not None,
+        has_api_key=has_api_key,
         created_at=current_user.created_at.isoformat(),
     )
 

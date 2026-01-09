@@ -352,6 +352,29 @@ class DailyPriceResponse(BaseModel):
     volume: int = Field(..., description="Volume")
 
 
+# Risk Settings Schemas
+class RiskSettingsRequest(BaseModel):
+    """Request schema for updating risk settings."""
+
+    stop_loss_pct: float = Field(
+        ..., ge=-100, le=0, description="Stop-loss percentage (negative, e.g., -5.0)"
+    )
+    take_profit_pct: float = Field(
+        ..., ge=0, le=100, description="Take-profit percentage (positive, e.g., 10.0)"
+    )
+    daily_loss_limit_pct: float = Field(
+        ..., ge=-100, le=0, description="Daily loss limit percentage (negative, e.g., -10.0)"
+    )
+
+
+class RiskSettingsResponse(BaseModel):
+    """Response schema for risk settings."""
+
+    stop_loss_pct: float = Field(..., description="Stop-loss percentage")
+    take_profit_pct: float = Field(..., description="Take-profit percentage")
+    daily_loss_limit_pct: float = Field(..., description="Daily loss limit percentage")
+
+
 # Error Schemas
 class ErrorResponse(BaseModel):
     """Response schema for errors."""

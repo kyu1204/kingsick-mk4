@@ -149,6 +149,47 @@ SLACK_WEBHOOK_URL=
 
 All code comments, variable names, and technical documentation should be in English. User-facing content and design documents may be in Korean.
 
+## 프론트엔드-백엔드 연동 규칙
+
+### API 연동 전 필수 확인 (MANDATORY)
+
+프론트엔드에서 API 호출 코드 작성 전 **반드시** 다음을 확인:
+
+1. **백엔드 라우터 코드 직접 확인**
+   - `backend/app/api/*.py` 파일에서 실제 `prefix` 확인
+   - `backend/app/main.py`에서 라우터 등록 prefix 확인
+   - 최종 경로 = main.py prefix + router prefix + endpoint path
+
+2. **Swagger 문서 참조**
+   - 백엔드 실행 후 `http://localhost:8000/docs` 에서 실제 API 스펙 확인
+   - Request/Response 스키마 확인
+
+### 연동 작업 체크리스트
+
+```
+[ ] 백엔드 라우터 파일에서 prefix 확인
+[ ] main.py에서 라우터 등록 경로 확인
+[ ] Swagger UI에서 실제 경로 검증
+[ ] 프론트엔드 API 클라이언트 코드 작성
+[ ] 실제 API 호출 테스트 (브라우저 Network 탭)
+```
+
+### 경로 불일치 방지
+
+**잘못된 예시 (추측 기반):**
+```typescript
+// 설계 문서만 보고 추측으로 작성 - 금지
+await apiClient.get('/api/v1/settings/api-key');
+```
+
+**올바른 예시 (코드 확인 후):**
+```typescript
+// backend/app/api/api_keys.py의 prefix="/settings/api-key" 확인
+// backend/app/main.py의 prefix="/api/v1" 확인
+// 최종: /api/v1 + /settings/api-key = /api/v1/settings/api-key
+await apiClient.get('/api/v1/settings/api-key');
+```
+
 ## 작업 프로세스 (Skills 참조)
 
 ### Phase/Task 완료 시

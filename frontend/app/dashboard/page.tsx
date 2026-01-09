@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Activity, DollarSign, Loader2, AlertCircle } from 'lucide-react';
 import { tradingApi, positionsApi, TradingMode } from '@/lib/api';
 import { ProtectedRoute } from '@/components/auth';
-import type { TradingStatusResponse, BalanceResponse, PositionSchema, AlertSchema } from '@/lib/api';
+import { PortfolioChart, StockChart } from '@/components/charts';
+import type { PortfolioDataPoint, OHLCVData } from '@/components/charts';
+import type { TradingStatusResponse, BalanceResponse, PositionSchema, AlertSchema, DailyPriceResponse } from '@/lib/api';
 
 // Types
 type ChangeType = 'profit' | 'loss' | 'neutral';
@@ -26,6 +28,56 @@ interface DashboardData {
   balance: BalanceResponse | null;
   positions: PositionSchema[];
   alerts: AlertSchema[];
+  dailyPrices: DailyPriceResponse[];
+  selectedStock: string | null;
+}
+
+/**
+ * Generate mock portfolio data based on current balance.
+ * In Phase 4, this will be replaced with actual historical data.
+ */
+function generateMockPortfolioData(balance: BalanceResponse | null): PortfolioDataPoint[] {
+  if (!balance) return [];
+
+  const data: PortfolioDataPoint[] = [];
+  const today = new Date();
+  const baseValue = balance.net_worth;
+
+  // Generate 30 days of mock data with realistic fluctuations
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+
+    // Create some variance (within +/- 5% of current value)
+    const variance = (Math.random() - 0.5) * 0.1;
+    const dayValue = baseValue * (1 - i * 0.001 + variance);
+
+    data.push({
+      date: date.toISOString().split('T')[0],
+      value: Math.round(dayValue),
+    });
+  }
+
+  // Ensure the last point matches current net worth
+  if (data.length > 0) {
+    data[data.length - 1].value = baseValue;
+  }
+
+  return data;
+}
+
+/**
+ * Convert daily prices to OHLCV format for chart.
+ */
+function convertToOHLCV(dailyPrices: DailyPriceResponse[]): OHLCVData[] {
+  return dailyPrices.map((dp) => ({
+    date: dp.date,
+    open: dp.open,
+    high: dp.high,
+    low: dp.low,
+    close: dp.close,
+    volume: dp.volume,
+  }));
 }
 
 // Format number with commas
@@ -95,9 +147,34 @@ export default function DashboardPage() {
     balance: null,
     positions: [],
     alerts: [],
+    dailyPrices: [],
+    selectedStock: null,
   });
   const [loading, setLoading] = useState(true);
+  const [chartLoading, setChartLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch daily prices for a stock
+  const fetchDailyPrices = async (stockCode: string) => {
+    setChartLoading(true);
+    try {
+      const prices = await positionsApi.getDailyPrices(stockCode, 100);
+      setData((prev) => ({
+        ...prev,
+        dailyPrices: prices,
+        selectedStock: stockCode,
+      }));
+    } catch {
+      // Silently fail for chart data
+      setData((prev) => ({
+        ...prev,
+        dailyPrices: [],
+        selectedStock: stockCode,
+      }));
+    } finally {
+      setChartLoading(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -113,12 +190,18 @@ export default function DashboardPage() {
           tradingApi.getAlerts().catch(() => ({ alerts: [] })),
         ]);
 
-        setData({
+        setData((prev) => ({
+          ...prev,
           tradingStatus,
           balance,
           positions: positionsResult.positions,
           alerts: alertsResult.alerts,
-        });
+        }));
+
+        // Fetch daily prices for the first position if available
+        if (positionsResult.positions.length > 0) {
+          fetchDailyPrices(positionsResult.positions[0].stock_code);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
       } finally {
@@ -132,6 +215,18 @@ export default function DashboardPage() {
     const interval = setInterval(fetchDashboardData, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Generate portfolio chart data
+  const portfolioChartData = useMemo(
+    () => generateMockPortfolioData(data.balance),
+    [data.balance]
+  );
+
+  // Convert daily prices for stock chart
+  const stockChartData = useMemo(
+    () => convertToOHLCV(data.dailyPrices),
+    [data.dailyPrices]
+  );
 
   const stats = buildStats(data);
   return (
@@ -209,7 +304,7 @@ export default function DashboardPage() {
 
         {/* Main Content Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          {/* Chart Placeholder */}
+          {/* Portfolio Performance Chart */}
           <Card className="col-span-4">
             <CardHeader>
               <CardTitle>Portfolio Performance</CardTitle>
@@ -217,8 +312,12 @@ export default function DashboardPage() {
                 Your portfolio value over the last 30 days
               </CardDescription>
             </CardHeader>
-            <CardContent className="h-[300px] flex items-center justify-center border-2 border-dashed border-muted rounded-lg">
-              <p className="text-muted-foreground">Chart will be implemented here</p>
+            <CardContent>
+              <PortfolioChart
+                data={portfolioChartData}
+                height={300}
+                loading={loading}
+              />
             </CardContent>
           </Card>
 
@@ -265,7 +364,13 @@ export default function DashboardPage() {
                 {/* Current Positions */}
                 {data.positions.length > 0 ? (
                   data.positions.slice(0, 4).map((position) => (
-                    <div key={position.stock_code} className="flex items-center justify-between">
+                    <div
+                      key={position.stock_code}
+                      className={`flex items-center justify-between cursor-pointer p-2 rounded-lg transition-colors hover:bg-muted/50 ${
+                        data.selectedStock === position.stock_code ? 'bg-muted/50' : ''
+                      }`}
+                      onClick={() => fetchDailyPrices(position.stock_code)}
+                    >
                       <div className="flex items-center gap-3">
                         {position.profit_loss >= 0 ? (
                           <TrendingUp className="h-4 w-4 text-green-500" />
@@ -297,6 +402,34 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Stock Price Chart */}
+        {data.positions.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Stock Price Chart
+                {data.selectedStock && (
+                  <span className="text-muted-foreground font-normal ml-2">
+                    ({data.positions.find((p) => p.stock_code === data.selectedStock)?.stock_name || data.selectedStock})
+                  </span>
+                )}
+              </CardTitle>
+              <CardDescription>
+                Click on a position above to view its price chart
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <StockChart
+                data={stockChartData}
+                type="candlestick"
+                height={400}
+                showVolume
+                loading={chartLoading}
+              />
+            </CardContent>
+          </Card>
+        )}
       </div>
     </MainLayout>
     </ProtectedRoute>

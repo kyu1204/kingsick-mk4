@@ -77,10 +77,10 @@
 
 | # | Task | 상태 | 설명 |
 |---|------|------|------|
-| 2-11 | 대시보드 차트 구현 | ⏳ 대기 | Lightweight Charts, 수익률 현황 |
-| 2-12 | 보유 종목 현황 UI | ⏳ 대기 | Portfolio 페이지 API 연동 |
-| 2-13 | 매매 내역 표시 | ⏳ 대기 | History 페이지 + AI 판단 근거 |
-| 2-14 | Settings 페이지 완성 | ⏳ 대기 | Trading Mode 변경 등 |
+| 2-11 | 대시보드 차트 구현 | ✅ 완료 | Lightweight Charts, StockChart + PortfolioChart |
+| 2-12 | 보유 종목 현황 UI | ✅ 완료 | Portfolio 페이지 API 연동 + KIS API fallback |
+| 2-13 | 매매 내역 표시 | ✅ 완료 | History 페이지 API 연동 + AI 판단 근거 툴팁 |
+| 2-14 | Settings 페이지 완성 | ✅ 완료 | Trading Mode 변경 + Risk Settings API 연동 |
 
 ### Task 목록 - 로그아웃 UI (백로그 완료)
 
@@ -158,6 +158,9 @@ cat docs/plans/PROGRESS.md
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-01-09 | Phase 2 Task 2-12, 2-13 완료 (Portfolio + History 페이지 API 연동) |
+| 2026-01-09 | Phase 2 Task 2-14 완료 (Settings - Trading Mode + Risk Settings API 연동) |
+| 2026-01-09 | Phase 2 Task 2-11 완료 (대시보드 차트 - Lightweight Charts) |
 | 2026-01-09 | Phase 2 인증 시스템 완료 (Task 2-1 ~ 2-10) |
 | 2026-01-09 | Phase 2 시작 - 인증 시스템 설계 완료 |
 | 2026-01-09 | Phase 1 완료 (API 라우터 + Frontend 연동) |

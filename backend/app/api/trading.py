@@ -27,6 +27,8 @@ from app.api.schemas import (
     RiskActionEnum,
     RiskCheckRequest,
     RiskCheckResponse,
+    RiskSettingsRequest,
+    RiskSettingsResponse,
     SetModeRequest,
     SignalTypeEnum,
     TradingModeEnum,
@@ -38,6 +40,15 @@ router = APIRouter(prefix="/trading", tags=["trading"])
 
 
 # Global trading state (in production, this would be in a database or session)
+class RiskSettings:
+    """Risk settings for trading."""
+
+    def __init__(self) -> None:
+        self.stop_loss_pct: float = -5.0
+        self.take_profit_pct: float = 10.0
+        self.daily_loss_limit_pct: float = -10.0
+
+
 class TradingState:
     """Simple in-memory trading state for demo purposes."""
 
@@ -45,6 +56,7 @@ class TradingState:
         self.mode: TradingModeEnum = TradingModeEnum.ALERT
         self.pending_alerts: dict[str, dict] = {}
         self.trailing_stops: dict[str, float] = {}
+        self.risk_settings: RiskSettings = RiskSettings()
 
 
 _trading_state = TradingState()
@@ -271,3 +283,46 @@ def check_can_open_position(
     )
 
     return CanOpenPositionResponse(can_open=can_open, reason=reason)
+
+
+@router.get("/risk-settings", response_model=RiskSettingsResponse)
+def get_risk_settings(
+    state: Annotated[TradingState, Depends(get_trading_state)],
+) -> RiskSettingsResponse:
+    """
+    Get current risk settings.
+
+    Returns:
+        RiskSettingsResponse with stop-loss, take-profit, and daily loss limit
+    """
+    return RiskSettingsResponse(
+        stop_loss_pct=state.risk_settings.stop_loss_pct,
+        take_profit_pct=state.risk_settings.take_profit_pct,
+        daily_loss_limit_pct=state.risk_settings.daily_loss_limit_pct,
+    )
+
+
+@router.post("/risk-settings", response_model=RiskSettingsResponse)
+def update_risk_settings(
+    request: RiskSettingsRequest,
+    state: Annotated[TradingState, Depends(get_trading_state)],
+) -> RiskSettingsResponse:
+    """
+    Update risk settings.
+
+    Args:
+        request: RiskSettingsRequest with new settings
+        state: Trading state
+
+    Returns:
+        RiskSettingsResponse with updated settings
+    """
+    state.risk_settings.stop_loss_pct = request.stop_loss_pct
+    state.risk_settings.take_profit_pct = request.take_profit_pct
+    state.risk_settings.daily_loss_limit_pct = request.daily_loss_limit_pct
+
+    return RiskSettingsResponse(
+        stop_loss_pct=state.risk_settings.stop_loss_pct,
+        take_profit_pct=state.risk_settings.take_profit_pct,
+        daily_loss_limit_pct=state.risk_settings.daily_loss_limit_pct,
+    )

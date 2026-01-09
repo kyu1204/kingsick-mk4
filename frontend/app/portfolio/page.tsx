@@ -1,55 +1,102 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, Loader2, AlertCircle } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth';
+import { positionsApi, PositionSchema, BalanceResponse } from '@/lib/api/positions';
 
-// Placeholder portfolio data
-const positions = [
+// Mock data for when KIS API is not configured
+const mockPositions: PositionSchema[] = [
   {
-    symbol: '005930',
-    name: 'Samsung Electronics',
+    stock_code: '005930',
+    stock_name: 'Samsung Electronics',
     quantity: 150,
-    avgPrice: 70500,
-    currentPrice: 72500,
-    pnl: 300000,
-    pnlPercent: 2.84,
+    avg_price: 70500,
+    current_price: 72500,
+    profit_loss: 300000,
+    profit_loss_rate: 2.84,
   },
   {
-    symbol: '035420',
-    name: 'NAVER',
+    stock_code: '035420',
+    stock_name: 'NAVER',
     quantity: 50,
-    avgPrice: 210000,
-    currentPrice: 215500,
-    pnl: 275000,
-    pnlPercent: 2.62,
+    avg_price: 210000,
+    current_price: 215500,
+    profit_loss: 275000,
+    profit_loss_rate: 2.62,
   },
   {
-    symbol: '035720',
-    name: 'Kakao',
+    stock_code: '035720',
+    stock_name: 'Kakao',
     quantity: 200,
-    avgPrice: 55000,
-    currentPrice: 52300,
-    pnl: -540000,
-    pnlPercent: -4.91,
+    avg_price: 55000,
+    current_price: 52300,
+    profit_loss: -540000,
+    profit_loss_rate: -4.91,
   },
   {
-    symbol: '006400',
-    name: 'Samsung SDI',
+    stock_code: '006400',
+    stock_name: 'Samsung SDI',
     quantity: 30,
-    avgPrice: 420000,
-    currentPrice: 438500,
-    pnl: 555000,
-    pnlPercent: 4.40,
+    avg_price: 420000,
+    current_price: 438500,
+    profit_loss: 555000,
+    profit_loss_rate: 4.40,
   },
 ];
 
 export default function PortfolioPage() {
-  const totalValue = positions.reduce((acc, pos) => acc + pos.currentPrice * pos.quantity, 0);
-  const totalPnl = positions.reduce((acc, pos) => acc + pos.pnl, 0);
-  const totalPnlPercent = (totalPnl / (totalValue - totalPnl)) * 100;
+  const [positions, setPositions] = useState<PositionSchema[]>([]);
+  const [balance, setBalance] = useState<BalanceResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isMockData, setIsMockData] = useState(false);
+
+  const fetchPortfolioData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    setIsMockData(false);
+
+    try {
+      const [positionsRes, balanceRes] = await Promise.all([
+        positionsApi.getPositions(),
+        positionsApi.getBalance(),
+      ]);
+      setPositions(positionsRes.positions);
+      setBalance(balanceRes);
+    } catch (err) {
+      console.error('Failed to fetch portfolio data:', err);
+      // Use mock data if KIS API is not configured (503 error)
+      setPositions(mockPositions);
+      setIsMockData(true);
+      setError('KIS API가 설정되지 않아 샘플 데이터를 표시합니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPortfolioData();
+  }, [fetchPortfolioData]);
+
+  const totalValue = positions.reduce((acc, pos) => acc + pos.current_price * pos.quantity, 0);
+  const totalPnl = positions.reduce((acc, pos) => acc + pos.profit_loss, 0);
+  const totalPnlPercent = totalValue - totalPnl > 0 ? (totalPnl / (totalValue - totalPnl)) * 100 : 0;
+
+  if (isLoading) {
+    return (
+      <ProtectedRoute>
+        <MainLayout>
+          <div className="flex items-center justify-center h-[60vh]">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </MainLayout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -62,6 +109,14 @@ export default function PortfolioPage() {
               Your current holdings and position performance
             </p>
           </div>
+
+          {/* Warning for mock data */}
+          {isMockData && error && (
+            <div className="flex items-center gap-2 p-4 bg-yellow-500/10 border border-yellow-500/50 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-yellow-500" />
+              <p className="text-sm text-yellow-500">{error}</p>
+            </div>
+          )}
 
           {/* Portfolio Summary */}
           <div className="grid gap-4 md:grid-cols-3">
@@ -127,30 +182,30 @@ export default function PortfolioPage() {
                 {/* Table Body */}
                 {positions.map((pos) => (
                   <div
-                    key={pos.symbol}
+                    key={pos.stock_code}
                     className="grid grid-cols-7 gap-4 items-center py-3 border-b border-border/50 hover:bg-accent/50 rounded-lg px-2 -mx-2 transition-colors"
                   >
-                    <div className="font-mono text-sm">{pos.symbol}</div>
-                    <div className="font-medium">{pos.name}</div>
+                    <div className="font-mono text-sm">{pos.stock_code}</div>
+                    <div className="font-medium">{pos.stock_name}</div>
                     <div className="text-right">{pos.quantity}</div>
-                    <div className="text-right">{pos.avgPrice.toLocaleString('ko-KR')}</div>
-                    <div className="text-right font-medium">{pos.currentPrice.toLocaleString('ko-KR')}</div>
-                    <div className={`text-right ${pos.pnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    <div className="text-right">{pos.avg_price.toLocaleString('ko-KR')}</div>
+                    <div className="text-right font-medium">{pos.current_price.toLocaleString('ko-KR')}</div>
+                    <div className={`text-right ${pos.profit_loss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                       <div className="flex items-center justify-end gap-1">
-                        {pos.pnl >= 0 ? (
+                        {pos.profit_loss >= 0 ? (
                           <TrendingUp className="h-4 w-4" />
                         ) : (
                           <TrendingDown className="h-4 w-4" />
                         )}
-                        {pos.pnl >= 0 ? '+' : ''}{pos.pnl.toLocaleString('ko-KR')}
+                        {pos.profit_loss >= 0 ? '+' : ''}{pos.profit_loss.toLocaleString('ko-KR')}
                       </div>
                       <div className="text-xs">
-                        ({pos.pnl >= 0 ? '+' : ''}{pos.pnlPercent.toFixed(2)}%)
+                        ({pos.profit_loss >= 0 ? '+' : ''}{pos.profit_loss_rate.toFixed(2)}%)
                       </div>
                     </div>
                     <div className="text-center">
-                      <Badge variant={pos.pnl >= 0 ? 'profit' : 'loss'}>
-                        {pos.pnl >= 0 ? 'Profit' : 'Loss'}
+                      <Badge variant={pos.profit_loss >= 0 ? 'profit' : 'loss'}>
+                        {pos.profit_loss >= 0 ? 'Profit' : 'Loss'}
                       </Badge>
                     </div>
                   </div>

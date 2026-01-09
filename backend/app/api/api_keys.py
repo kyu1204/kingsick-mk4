@@ -16,7 +16,7 @@ from app.database import get_db
 from app.models import User, UserApiKey
 from app.services.encryption import decrypt, encrypt, mask_string
 
-router = APIRouter(prefix="/api-keys", tags=["API Keys"])
+router = APIRouter(prefix="/settings/api-key", tags=["Settings - API Keys"])
 
 
 # Request/Response schemas
