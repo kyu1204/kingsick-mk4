@@ -62,11 +62,11 @@
 
 | # | Task | 상태 | 설명 |
 |---|------|------|------|
-| 2-1 | Backend 모델 생성 | ⏳ 대기 | User, Invitation, UserApiKey + 마이그레이션 |
-| 2-2 | 암호화 유틸리티 | ⏳ 대기 | AES-256-GCM encrypt/decrypt |
-| 2-3 | 인증 서비스 | ⏳ 대기 | JWT 발급/검증, 비밀번호 해싱 |
-| 2-4 | Auth API 라우터 | ⏳ 대기 | register, login, refresh, logout |
-| 2-5 | 기타 라우터 | ⏳ 대기 | users, invitations, api-keys |
+| 2-1 | Backend 모델 생성 | ✅ 완료 | User, Invitation, UserApiKey + Alembic 설정 |
+| 2-2 | 암호화 유틸리티 | ✅ 완료 | AES-256-GCM encrypt/decrypt (13 tests) |
+| 2-3 | 인증 서비스 | ✅ 완료 | JWT 발급/검증, 비밀번호 해싱 (17 tests) |
+| 2-4 | Auth API 라우터 | ✅ 완료 | register, login, refresh, logout (14 tests) |
+| 2-5 | 기타 라우터 | ✅ 완료 | users, invitations, api-keys |
 | 2-6 | Frontend AuthContext | ⏳ 대기 | 로그인 상태 관리, useAuth 훅 |
 | 2-7 | 로그인/회원가입 페이지 | ⏳ 대기 | API 연동 |
 | 2-8 | ProtectedRoute 컴포넌트 | ⏳ 대기 | 미인증 시 리다이렉트 |
