@@ -149,108 +149,13 @@ SLACK_WEBHOOK_URL=
 
 All code comments, variable names, and technical documentation should be in English. User-facing content and design documents may be in Korean.
 
-## Phase 완료 검증 가이드라인
+## 작업 프로세스 (Skills 참조)
 
-### 1. Task 완료 ≠ Phase 완료
+### Phase/Task 완료 시
+**`/phase-completion` skill 반드시 invoke** - 브라우저 E2E 테스트 포함 전체 검증
 
-**단위 테스트 통과만으로 기능 완료로 판단하지 말 것.**
+### 세션 시작/재개 시
+**`/progress-tracking` skill invoke** - PROGRESS.md 기반 현재 상태 파악
 
-각 Task는 반드시 다음을 포함해야 함:
-- 서비스 로직 구현
-- API 라우터 연결 (HTTP 엔드포인트 노출)
-- 통합 테스트 또는 E2E 테스트
-- Frontend 연동 (해당 시)
-
-### 2. Phase 완료 전 필수 체크리스트
-
-Phase를 완료로 선언하기 전 반드시 확인:
-
-- [ ] 모든 서비스가 API 엔드포인트로 노출되어 있는가?
-- [ ] `curl` 또는 API 클라이언트로 실제 호출이 가능한가?
-- [ ] Frontend에서 Backend API 호출이 동작하는가?
-- [ ] 설계 문서의 모든 요구사항이 **실제로 동작**하는가?
-- [ ] E2E 시나리오 테스트를 수행했는가?
-- [ ] **브라우저에서 직접 UI 테스트**를 수행했는가?
-
-### 2-1. 브라우저 직접 테스트 (필수)
-
-**curl/API 테스트만으로 충분하지 않음.** 실제 브라우저에서 UI가 정상 동작하는지 확인 필수.
-
-브라우저 테스트 체크리스트:
-- [ ] 페이지가 에러 없이 로드되는가?
-- [ ] API 호출이 네트워크 탭에서 확인되는가?
-- [ ] API 응답 데이터가 UI에 올바르게 표시되는가?
-- [ ] 사용자 인터랙션(클릭, 입력 등)이 동작하는가?
-- [ ] 에러 상태가 적절히 처리되는가? (로딩, 에러 메시지 등)
-
-테스트 방법:
-```bash
-# 1. 서버 시작
-cd backend && uv run uvicorn app.main:app --reload --port 8000
-cd frontend && npm run dev
-
-# 2. 브라우저에서 직접 확인 또는 Chrome MCP 도구 사용
-# - mcp__claude-in-chrome__navigate
-# - mcp__claude-in-chrome__computer (screenshot)
-# - mcp__claude-in-chrome__read_network_requests
-```
-
-### 3. Spec Reviewer 추가 검증 항목
-
-코드 리뷰 시 다음도 확인:
-
-- [ ] 구현된 기능이 외부에서 접근 가능한가?
-- [ ] API 엔드포인트가 올바르게 노출되어 있는가?
-- [ ] 서비스 간 통합이 실제로 동작하는가?
-
-### 4. 흔한 실수 방지
-
-| 실수 | 올바른 접근 |
-|------|------------|
-| 서비스만 구현하고 API 미연결 | Task에 "API 라우터 구현" 명시적 포함 |
-| 단위 테스트만 작성 | 통합/E2E 테스트도 필수 |
-| "테스트 통과 = 완료" 판단 | 실제 서버 기동 후 API 호출 검증 |
-| Phase 완료 후 다음 Phase 진행 | Phase 완료 체크리스트 먼저 확인 |
-
-## 문서 기반 진행 상황 추적
-
-### 1. 진행 상황 문서
-
-**`docs/plans/PROGRESS.md`** - 모든 Phase/Task 진행 상황을 추적하는 마스터 문서
-
-장비 변경 또는 세션 재시작 시 반드시 이 문서를 먼저 확인하여 현재 작업 상태를 파악.
-
-### 2. 작업 시작 전 필수 확인
-
-```bash
-# 1. PROGRESS.md 확인
-cat docs/plans/PROGRESS.md
-
-# 2. 현재 Phase와 다음 Task 파악
-# 3. Task 시작 시 상태를 "🔄 진행중"으로 업데이트
-```
-
-### 3. Task 완료 시 업데이트 필수
-
-Task 완료 후 반드시 PROGRESS.md 업데이트:
-- Task 상태: ⏳ 대기 → 🔄 진행중 → ✅ 완료
-- 테스트 결과 기록 (테스트 수, 커버리지)
-- Phase 검증 체크리스트 체크
-- 변경 이력에 날짜와 내용 추가
-
-### 4. 상태 코드
-
-| 상태 | 의미 |
-|------|------|
-| ✅ 완료 | 구현, 테스트, 검증 모두 완료 |
-| 🔄 진행중 | 현재 작업 중 |
-| ⏳ 대기 | 아직 시작 안함 |
-| ⚠️ 블로킹 | 다른 작업 완료 필요 |
-| ❌ 취소 | 계획 변경으로 취소됨 |
-
-### 5. 세션 재시작 시 첫 단계
-
-1. `docs/plans/PROGRESS.md` 읽기
-2. 현재 Phase 확인
-3. 완료되지 않은 Task 중 다음 Task 식별
-4. 해당 Task부터 작업 재개
+### 진행 상황 문서
+**`docs/plans/PROGRESS.md`** - 모든 Phase/Task 상태 추적의 Single Source of Truth

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Activity, DollarSign, Loader2, AlertCircle } from 'lucide-react';
 import { tradingApi, positionsApi, TradingMode } from '@/lib/api';
+import { ProtectedRoute } from '@/components/auth';
 import type { TradingStatusResponse, BalanceResponse, PositionSchema, AlertSchema } from '@/lib/api';
 
 // Types
@@ -134,6 +135,7 @@ export default function DashboardPage() {
 
   const stats = buildStats(data);
   return (
+    <ProtectedRoute>
     <MainLayout>
       <div className="space-y-6">
         {/* Page Header */}
@@ -297,5 +299,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </MainLayout>
+    </ProtectedRoute>
   );
 }

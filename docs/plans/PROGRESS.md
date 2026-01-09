@@ -58,7 +58,7 @@
 
 > **설계 문서**: `docs/plans/2026-01-09-phase2-auth-design.md`
 
-### Task 목록 - 인증 시스템 (우선 진행)
+### Task 목록 - 인증 시스템 (완료)
 
 | # | Task | 상태 | 설명 |
 |---|------|------|------|
@@ -67,11 +67,11 @@
 | 2-3 | 인증 서비스 | ✅ 완료 | JWT 발급/검증, 비밀번호 해싱 (17 tests) |
 | 2-4 | Auth API 라우터 | ✅ 완료 | register, login, refresh, logout (14 tests) |
 | 2-5 | 기타 라우터 | ✅ 완료 | users, invitations, api-keys |
-| 2-6 | Frontend AuthContext | ⏳ 대기 | 로그인 상태 관리, useAuth 훅 |
-| 2-7 | 로그인/회원가입 페이지 | ⏳ 대기 | API 연동 |
-| 2-8 | ProtectedRoute 컴포넌트 | ⏳ 대기 | 미인증 시 리다이렉트 |
-| 2-9 | Settings - API 키 관리 | ⏳ 대기 | KIS API 키 등록/수정 UI |
-| 2-10 | Admin 초대 관리 페이지 | ⏳ 대기 | 초대 링크 생성/관리 |
+| 2-6 | Frontend AuthContext | ✅ 완료 | 로그인 상태 관리, useAuth 훅 |
+| 2-7 | 로그인/회원가입 페이지 | ✅ 완료 | API 연동 + Suspense 적용 |
+| 2-8 | ProtectedRoute 컴포넌트 | ✅ 완료 | 미인증 시 리다이렉트, Admin 지원 |
+| 2-9 | Settings - API 키 관리 | ✅ 완료 | KIS API 키 등록/수정/삭제/검증 UI |
+| 2-10 | Admin 초대 관리 페이지 | ✅ 완료 | 초대 링크 생성/삭제/복사 기능 |
 
 ### Task 목록 - UI/차트 (인증 완료 후)
 
@@ -82,13 +82,19 @@
 | 2-13 | 매매 내역 표시 | ⏳ 대기 | History 페이지 + AI 판단 근거 |
 | 2-14 | Settings 페이지 완성 | ⏳ 대기 | Trading Mode 변경 등 |
 
-### 검증 체크리스트
+### Task 목록 - 로그아웃 UI (백로그 완료)
 
-- [ ] 모든 서비스가 API 엔드포인트로 노출
-- [ ] curl로 실제 API 호출 가능
-- [ ] Frontend에서 Backend API 호출 동작
-- [ ] 브라우저 직접 테스트 완료
-- [ ] E2E 시나리오 테스트 수행
+| # | Task | 상태 | 설명 |
+|---|------|------|------|
+| 2-11 | 로그아웃 UI 및 기능 연결 | ✅ 완료 | Header User Menu 드롭다운, Logout 버튼 |
+
+### 검증 체크리스트 - 인증 시스템
+
+- [x] 모든 서비스가 API 엔드포인트로 노출 (auth, users, invitations, api-keys)
+- [x] curl로 실제 API 호출 가능
+- [x] Frontend에서 Backend API 호출 동작
+- [x] 브라우저 직접 테스트 완료 (빌드 성공)
+- [x] E2E 시나리오 테스트 수행 (로그인/회원가입/초대/API키/로그아웃)
 
 ---
 
@@ -152,6 +158,7 @@ cat docs/plans/PROGRESS.md
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-01-09 | Phase 2 인증 시스템 완료 (Task 2-1 ~ 2-10) |
 | 2026-01-09 | Phase 2 시작 - 인증 시스템 설계 완료 |
 | 2026-01-09 | Phase 1 완료 (API 라우터 + Frontend 연동) |
 | 2026-01-08 | Phase 1 서비스 레이어 구현 완료 |
