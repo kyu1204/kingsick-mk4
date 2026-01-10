@@ -1,23 +1,54 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, AlertCircle, RefreshCw } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth';
-
-// Placeholder watchlist data
-const watchlistItems = [
-  { symbol: '005930', name: 'Samsung Electronics', price: 72500, change: 1.23, signal: 'BUY' },
-  { symbol: '000660', name: 'SK Hynix', price: 185000, change: -0.54, signal: 'HOLD' },
-  { symbol: '035420', name: 'NAVER', price: 215500, change: 2.15, signal: 'BUY' },
-  { symbol: '035720', name: 'Kakao', price: 52300, change: -1.87, signal: 'SELL' },
-  { symbol: '051910', name: 'LG Chem', price: 382000, change: 0.79, signal: 'HOLD' },
-  { symbol: '006400', name: 'Samsung SDI', price: 438500, change: 1.45, signal: 'BUY' },
-];
+import { watchlistApi, type WatchlistItem } from '@/lib/api';
+import { WatchlistTable, AddStockModal, EditStockModal } from '@/components/watchlist';
 
 export default function WatchlistPage() {
+  const [items, setItems] = useState<WatchlistItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editItem, setEditItem] = useState<WatchlistItem | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchWatchlist = useCallback(async () => {
+    try {
+      const response = await watchlistApi.getWatchlist();
+      setItems(response.items);
+      setError(null);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('관심 종목을 불러오는데 실패했습니다.');
+      }
+    }
+  }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchWatchlist();
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      await fetchWatchlist();
+      setLoading(false);
+    };
+    load();
+  }, [fetchWatchlist]);
+
+  const activeCount = items.filter((item) => item.is_active).length;
+
   return (
     <ProtectedRoute>
       <MainLayout>
@@ -25,76 +56,111 @@ export default function WatchlistPage() {
           {/* Page Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Watchlist</h1>
+              <h1 className="text-3xl font-bold tracking-tight">관심 종목</h1>
               <p className="text-muted-foreground">
-                Monitor your favorite stocks and receive AI trading signals
+                관심 종목을 관리하고 매매 설정을 입력하세요
               </p>
             </div>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Stock
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleRefresh}
+                disabled={refreshing}
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              </Button>
+              <Button onClick={() => setAddModalOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                종목 추가
+              </Button>
+            </div>
           </div>
+
+          {/* Stats */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">전체 종목</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{items.length}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">활성 종목</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-500">{activeCount}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">비활성 종목</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-muted-foreground">
+                  {items.length - activeCount}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Error State */}
+          {error && (
+            <Card className="border-red-500/50">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 text-red-500">
+                  <AlertCircle className="h-5 w-5" />
+                  <p>{error}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Watchlist Table */}
           <Card>
             <CardHeader>
-              <CardTitle>My Watchlist</CardTitle>
-              <CardDescription>
-                {watchlistItems.length} stocks being monitored
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>관심 종목 목록</CardTitle>
+                  <CardDescription>
+                    {items.length > 0
+                      ? `총 ${items.length}개 종목 (활성: ${activeCount})`
+                      : '관심 종목을 추가해주세요'}
+                  </CardDescription>
+                </div>
+                {items.length > 0 && (
+                  <Badge variant="secondary">{activeCount}개 활성</Badge>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {/* Table Header */}
-                <div className="grid grid-cols-5 gap-4 text-sm font-medium text-muted-foreground border-b pb-2">
-                  <div>Symbol</div>
-                  <div>Name</div>
-                  <div className="text-right">Price (KRW)</div>
-                  <div className="text-right">Change</div>
-                  <div className="text-center">AI Signal</div>
-                </div>
-
-                {/* Table Body */}
-                {watchlistItems.map((item) => (
-                  <div
-                    key={item.symbol}
-                    className="grid grid-cols-5 gap-4 items-center py-2 border-b border-border/50 hover:bg-accent/50 rounded-lg px-2 -mx-2 transition-colors"
-                  >
-                    <div className="font-mono text-sm">{item.symbol}</div>
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-right font-medium">
-                      {item.price.toLocaleString('ko-KR')}
-                    </div>
-                    <div className={`text-right flex items-center justify-end gap-1 ${
-                      item.change >= 0 ? 'text-green-500' : 'text-red-500'
-                    }`}>
-                      {item.change >= 0 ? (
-                        <TrendingUp className="h-4 w-4" />
-                      ) : (
-                        <TrendingDown className="h-4 w-4" />
-                      )}
-                      {item.change >= 0 ? '+' : ''}{item.change.toFixed(2)}%
-                    </div>
-                    <div className="text-center">
-                      <Badge
-                        variant={
-                          item.signal === 'BUY'
-                            ? 'profit'
-                            : item.signal === 'SELL'
-                            ? 'loss'
-                            : 'secondary'
-                        }
-                      >
-                        {item.signal}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <WatchlistTable
+                items={items}
+                loading={loading}
+                onEdit={setEditItem}
+                onRefresh={fetchWatchlist}
+              />
             </CardContent>
           </Card>
         </div>
+
+        {/* Add Stock Modal */}
+        <AddStockModal
+          open={addModalOpen}
+          onOpenChange={setAddModalOpen}
+          onSuccess={fetchWatchlist}
+        />
+
+        {/* Edit Stock Modal */}
+        <EditStockModal
+          item={editItem}
+          open={editItem !== null}
+          onOpenChange={(open) => !open && setEditItem(null)}
+          onSuccess={fetchWatchlist}
+        />
       </MainLayout>
     </ProtectedRoute>
   );

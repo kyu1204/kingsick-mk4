@@ -72,6 +72,11 @@ class User(Base):
         foreign_keys="Invitation.created_by",
         cascade="all, delete-orphan",
     )
+    watchlist_items: Mapped[list["WatchlistItem"]] = relationship(  # noqa: F821
+        "WatchlistItem",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"

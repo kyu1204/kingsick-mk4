@@ -6,13 +6,17 @@ Provides endpoints for:
 - Alert approval/rejection
 - Risk management checks
 - Position sizing
+- Watchlist trading targets
 """
 
 from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.auth import get_current_user
 from app.api.schemas import (
     AlertListResponse,
     AlertSchema,
@@ -34,9 +38,28 @@ from app.api.schemas import (
     TradingModeEnum,
     TradingStatusResponse,
 )
+from app.database import get_db
+from app.models import User
 from app.services.risk_manager import RiskAction, RiskManager
+from app.services.watchlist import WatchlistService
 
 router = APIRouter(prefix="/trading", tags=["trading"])
+
+
+# Watchlist trading targets response schema
+class TradingTargetsResponse(BaseModel):
+    """Response for trading targets from watchlist."""
+
+    stock_codes: list[str]
+    total: int
+
+
+class TradingSettingsResponse(BaseModel):
+    """Response for trading settings from watchlist."""
+
+    target_price: float | None
+    stop_loss_price: float | None
+    quantity: int | None
 
 
 # Global trading state (in production, this would be in a database or session)
@@ -326,3 +349,42 @@ def update_risk_settings(
         take_profit_pct=state.risk_settings.take_profit_pct,
         daily_loss_limit_pct=state.risk_settings.daily_loss_limit_pct,
     )
+
+
+@router.get("/targets", response_model=TradingTargetsResponse)
+async def get_trading_targets(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> TradingTargetsResponse:
+    """
+    Get active watchlist stock codes for trading.
+
+    Returns:
+        TradingTargetsResponse with list of stock codes and total count
+    """
+    service = WatchlistService(db)
+    stock_codes = await service.get_active_stock_codes(current_user.id)
+    return TradingTargetsResponse(stock_codes=stock_codes, total=len(stock_codes))
+
+
+@router.get("/settings/{stock_code}", response_model=TradingSettingsResponse | None)
+async def get_trading_settings_for_stock(
+    stock_code: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> TradingSettingsResponse | None:
+    """
+    Get watchlist trading settings for a specific stock.
+
+    Args:
+        stock_code: The stock code to get settings for
+
+    Returns:
+        TradingSettingsResponse with target_price, stop_loss_price, quantity
+        or None if stock is not in watchlist or not active
+    """
+    service = WatchlistService(db)
+    settings = await service.get_trading_settings(current_user.id, stock_code)
+    if not settings:
+        return None
+    return TradingSettingsResponse(**settings)
