@@ -12,8 +12,9 @@ from app.services.slack_service import (
 )
 
 # Fake webhook URL for testing (not a real Slack URL)
-FAKE_WEBHOOK_URL = "https://hooks.slack.com/services/TEST00001/TEST00002/testtoken123456789012"
-FAKE_WEBHOOK_URL_HTTP = "http://hooks.slack.com/services/TEST00001/TEST00002/testtoken123456789012"
+# Pattern: T[A-Z0-9]+/B[A-Z0-9]+/[a-zA-Z0-9]+
+FAKE_WEBHOOK_URL = "https://hooks.slack.com/services/T0TEST1234/B0TEST5678/abcdef123456789xyz"
+FAKE_WEBHOOK_URL_HTTP = "http://hooks.slack.com/services/T0TEST1234/B0TEST5678/abcdef123456789xyz"
 
 
 class TestSlackAlertInfo:
@@ -73,9 +74,9 @@ class TestSlackService:
 
     def test_mask_webhook_url(self, slack_service):
         masked = slack_service.mask_webhook_url(FAKE_WEBHOOK_URL)
-        assert "TEST****" in masked
+        assert "T0TE****" in masked
         assert "****" in masked
-        assert "testtoken123456789012" not in masked
+        assert "abcdef123456789xyz" not in masked
 
     def test_mask_webhook_url_empty(self, slack_service):
         assert slack_service.mask_webhook_url("") == ""
