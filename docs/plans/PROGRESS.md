@@ -1,7 +1,7 @@
 # KingSick 개발 진행 상황
 
 > **마지막 업데이트**: 2026-01-10
-> **현재 Phase**: Phase 3 진행중 (Alert Execution 완료, Slack 대기)
+> **현재 Phase**: Phase 3 진행중 (Slack Webhook 완료)
 > **담당자**: 장비 이동 시에도 이 문서를 통해 작업 상태 추적
 
 ---
@@ -112,7 +112,7 @@
 | 3-1 | 종목 직접 지정 (Watchlist) | ✅ 완료 | P1 |
 | 3-2 | AI 자동 스캔 (옵션) | ⏳ 대기 | P3 |
 | 3-3 | Telegram Bot 연동 | ✅ 완료 | P1 |
-| 3-4 | Slack Webhook 연동 | ⏳ 대기 | P2 |
+| 3-4 | Slack Webhook 연동 | ✅ 완료 | P2 |
 | 3-5 | 알림 승인 → 주문 실행 연결 | ✅ 완료 | P1 |
 
 ### Task 3-1: Watchlist 상세 ✅
@@ -164,6 +164,29 @@
 - [x] Backend 테스트 39개 통과
 - [x] Frontend 테스트 16개 통과
 - [x] 브라우저 E2E 테스트 완료 (401→200 인증 수정)
+
+### Task 3-4: Slack Webhook 연동 ✅
+
+> **설계 문서**: `docs/plans/2026-01-10-phase3-slack-design.md`
+
+| # | Task | 상태 | 설명 |
+|---|------|------|------|
+| 3-4-1 | User 모델 확장 | ✅ 완료 | slack_webhook_url 필드 + 마이그레이션 |
+| 3-4-2 | SlackService | ✅ 완료 | 메시지 전송, Block Kit 포맷 (18 tests) |
+| 3-4-3 | Slack API 라우터 | ✅ 완료 | status, save, test, delete (4 tests) |
+| 3-4-4 | TradingEngine 연동 | ✅ 완료 | 알림 시 Slack + Telegram 전송 |
+| 3-4-5 | Frontend Settings UI | ✅ 완료 | SlackSettings 컴포넌트 |
+| 3-4-6 | Frontend API 클라이언트 | ✅ 완료 | lib/api/slack.ts |
+
+### 검증 체크리스트 - Slack Webhook
+
+- [x] SlackService 메시지 전송/재시도 구현
+- [x] Slack API 라우터 (status, save, test, delete)
+- [x] Block Kit 포맷 알림 메시지
+- [x] TradingEngine에서 Slack 알림 전송 연동
+- [x] Frontend SlackSettings 컴포넌트 구현
+- [x] Backend 테스트 18개 통과
+- [x] Integration 테스트 4개 통과
 
 ### Task 3-5: Alert Approval → Order Execution ✅
 
@@ -243,6 +266,7 @@ cat docs/plans/PROGRESS.md
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-01-10 | Task 3-4 완료 - Slack Webhook 연동 구현 (SlackService + API 4개 + Frontend UI + 테스트 22개) |
 | 2026-01-10 | Task 3-5-7 완료 - Alert Expiry 구현 (5분 타임아웃 + 만료 메시지 + 테스트 5개) |
 | 2026-01-10 | Task 3-5 완료 - Alert Execution 설계 문서 작성 + await 버그 수정 |
 | 2026-01-10 | Task 3-3 완료 - Telegram Bot 연동 구현 (Backend + Frontend + 테스트) |

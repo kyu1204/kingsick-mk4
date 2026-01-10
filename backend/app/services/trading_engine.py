@@ -22,6 +22,7 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from app.services.slack_service import SlackService
     from app.services.telegram_service import TelegramService
 
 from app.services.kis_api import (
@@ -137,6 +138,7 @@ class TradingEngine:
         signal_generator: SignalGenerator,
         risk_manager: RiskManager,
         telegram_service: TelegramService | None = None,
+        slack_service: SlackService | None = None,
     ) -> None:
         """Initialize the trading engine.
 
@@ -146,18 +148,21 @@ class TradingEngine:
             signal_generator: Signal generator instance
             risk_manager: Risk manager instance
             telegram_service: Telegram service instance for alert notifications
+            slack_service: Slack service instance for alert notifications
         """
         self.mode = mode
         self._kis_client = kis_client
         self._signal_generator = signal_generator
         self._risk_manager = risk_manager
         self._telegram_service = telegram_service
+        self._slack_service = slack_service
         self._trailing_stops: dict[str, TrailingStop] = {}
         self._pending_alerts: dict[str, AlertInfo] = {}
         self._daily_pnl_pct: float = 0.0
         # Context for current trading loop
         self._current_user_id: str | None = None
         self._current_telegram_chat_id: str | None = None
+        self._current_slack_webhook_url: str | None = None
         self._stock_names: dict[str, str] = {}
 
     def set_mode(self, mode: TradingMode) -> None:
@@ -201,6 +206,7 @@ class TradingEngine:
         positions: list[Position],
         user_id: str | None = None,
         telegram_chat_id: str | None = None,
+        slack_webhook_url: str | None = None,
         stock_names: dict[str, str] | None = None,
     ) -> TradingLoopResult:
         """Execute the main trading loop.
@@ -216,6 +222,7 @@ class TradingEngine:
             positions: List of current positions
             user_id: User ID for alert ownership (required in ALERT mode)
             telegram_chat_id: User's Telegram chat ID for notifications
+            slack_webhook_url: User's Slack webhook URL for notifications
             stock_names: Mapping of stock codes to stock names
 
         Returns:
@@ -223,6 +230,7 @@ class TradingEngine:
         """
         self._current_user_id = user_id
         self._current_telegram_chat_id = telegram_chat_id
+        self._current_slack_webhook_url = slack_webhook_url
         self._stock_names = stock_names or {}
         result = TradingLoopResult(
             processed_stocks=0,
@@ -499,8 +507,8 @@ class TradingEngine:
             result.alerts_sent += 1
             logger.info(f"Buy alert created: {stock_code}, alert_id={alert.alert_id}")
 
-            # Send Telegram notification if available
             await self._send_telegram_alert(alert)
+            await self._send_slack_alert(alert)
 
             return None
 
@@ -559,8 +567,8 @@ class TradingEngine:
             result.alerts_sent += 1
             logger.info(f"Sell alert created: {stock_code}, alert_id={alert.alert_id}")
 
-            # Send Telegram notification if available
             await self._send_telegram_alert(alert)
+            await self._send_slack_alert(alert)
 
             return None
 
@@ -801,6 +809,41 @@ class TradingEngine:
         except Exception as e:
             logger.error(f"Failed to send Telegram alert: {e}")
 
+    async def _send_slack_alert(self, alert: AlertInfo) -> None:
+        if not self._slack_service:
+            return
+
+        if not self._current_slack_webhook_url:
+            logger.debug("No Slack webhook URL for user, skipping notification")
+            return
+
+        try:
+            from app.services.slack_service import SlackAlertInfo
+
+            slack_alert = SlackAlertInfo(
+                alert_id=alert.alert_id,
+                stock_code=alert.stock_code,
+                stock_name=alert.stock_name,
+                signal="BUY" if alert.signal_type == SignalType.BUY else "SELL",
+                confidence=alert.signal.confidence,
+                current_price=alert.current_price,
+                target_price=alert.signal.indicators.get("target_price"),
+                stop_loss_price=alert.signal.indicators.get("stop_loss_price"),
+                reasoning=alert.signal.reason.split(", ") if alert.signal.reason else [],
+                created_at=alert.created_at,
+            )
+
+            await self._slack_service.send_alert(
+                webhook_url=self._current_slack_webhook_url,
+                alert=slack_alert,
+            )
+            logger.info(
+                f"Slack alert sent for {alert.stock_code}, "
+                f"alert_id={alert.alert_id}"
+            )
+        except Exception as e:
+            logger.error(f"Failed to send Slack alert: {e}")
+
 
 # Singleton instance
 _trading_engine: TradingEngine | None = None
@@ -829,6 +872,7 @@ def init_trading_engine(
     signal_generator: SignalGenerator,
     risk_manager: RiskManager,
     telegram_service: TelegramService | None = None,
+    slack_service: SlackService | None = None,
 ) -> TradingEngine:
     """Initialize the singleton TradingEngine instance.
 
@@ -838,6 +882,7 @@ def init_trading_engine(
         signal_generator: Signal generator instance
         risk_manager: Risk manager instance
         telegram_service: Telegram service instance for alert notifications
+        slack_service: Slack service instance for alert notifications
 
     Returns:
         The initialized TradingEngine instance
@@ -849,5 +894,6 @@ def init_trading_engine(
         signal_generator=signal_generator,
         risk_manager=risk_manager,
         telegram_service=telegram_service,
+        slack_service=slack_service,
     )
     return _trading_engine

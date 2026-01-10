@@ -4,10 +4,8 @@
  * Re-exports all API modules for convenient importing.
  */
 
-// Client
 export { apiClient, ApiError, getApiBaseUrl } from './client';
 
-// Trading
 export {
   tradingApi,
   TradingMode,
@@ -28,7 +26,6 @@ export type {
   CanOpenPositionResponse,
 } from './trading';
 
-// Signals
 export { signalsApi, SignalType } from './signals';
 export type {
   GenerateSignalRequest,
@@ -36,7 +33,6 @@ export type {
   TradingSignalResponse,
 } from './signals';
 
-// Positions
 export { positionsApi } from './positions';
 export type {
   PositionSchema,
@@ -46,7 +42,6 @@ export type {
   DailyPriceResponse,
 } from './positions';
 
-// Indicators
 export { indicatorsApi } from './indicators';
 export type {
   SMARequest,
@@ -65,7 +60,6 @@ export type {
   CrossDetectionResponse,
 } from './indicators';
 
-// Invitations
 export {
   createInvitation,
   listInvitations,
@@ -77,7 +71,6 @@ export type {
   InvitationsResponse,
 } from './invitations';
 
-// API Keys
 export {
   getApiKeyInfo,
   saveApiKey,
@@ -90,7 +83,6 @@ export type {
   VerifyApiKeyResult,
 } from './api-keys';
 
-// Watchlist
 export { watchlistApi } from './watchlist';
 export type {
   WatchlistItem,
@@ -101,14 +93,19 @@ export type {
   DeleteResponse,
 } from './watchlist';
 
-// Stocks
 export { stocksApi } from './stocks';
 export type { StockInfo, StockSearchResponse } from './stocks';
 
-// Telegram
 export { telegramApi } from './telegram';
 export type {
   TelegramLinkResponse,
   TelegramStatusResponse,
   TelegramUnlinkResponse,
 } from './telegram';
+
+export { slackApi } from './slack';
+export type {
+  SlackStatusResponse,
+  SlackWebhookRequest,
+  SlackMessageResponse,
+} from './slack';

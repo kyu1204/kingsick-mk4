@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ApiKeySettings, TelegramSettings } from '@/components/settings';
+import { ApiKeySettings, TelegramSettings, SlackSettings } from '@/components/settings';
 import { ProtectedRoute } from '@/components/auth';
 import { tradingApi, TradingMode, RiskSettingsResponse } from '@/lib/api/trading';
 
@@ -15,7 +15,6 @@ export default function SettingsPage() {
   const [isLoadingMode, setIsLoadingMode] = useState(true);
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
 
-  // Risk Settings state
   const [riskSettings, setRiskSettings] = useState<RiskSettingsResponse>({
     stop_loss_pct: -5.0,
     take_profit_pct: 10.0,
@@ -24,7 +23,6 @@ export default function SettingsPage() {
   const [isLoadingRisk, setIsLoadingRisk] = useState(true);
   const [isSavingRisk, setIsSavingRisk] = useState(false);
 
-  // Fetch current trading status on mount
   const fetchTradingStatus = useCallback(async () => {
     try {
       const status = await tradingApi.getStatus();
@@ -36,7 +34,6 @@ export default function SettingsPage() {
     }
   }, []);
 
-  // Fetch risk settings on mount
   const fetchRiskSettings = useCallback(async () => {
     try {
       const settings = await tradingApi.getRiskSettings();
@@ -53,7 +50,6 @@ export default function SettingsPage() {
     fetchRiskSettings();
   }, [fetchTradingStatus, fetchRiskSettings]);
 
-  // Handle mode change
   const handleModeChange = async (newMode: TradingMode) => {
     if (newMode === tradingMode || isSwitchingMode) return;
 
@@ -68,7 +64,6 @@ export default function SettingsPage() {
     }
   };
 
-  // Handle risk settings save
   const handleSaveRiskSettings = async () => {
     if (isSavingRisk) return;
 
@@ -91,7 +86,6 @@ export default function SettingsPage() {
     <ProtectedRoute>
       <MainLayout>
         <div className="space-y-6">
-          {/* Page Header */}
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
             <p className="text-muted-foreground">
@@ -100,7 +94,6 @@ export default function SettingsPage() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
-            {/* Trading Mode */}
             <Card>
               <CardHeader>
                 <CardTitle>Trading Mode</CardTitle>
@@ -150,7 +143,6 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            {/* Risk Management */}
             <Card>
               <CardHeader>
                 <CardTitle>Risk Management</CardTitle>
@@ -214,11 +206,11 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            {/* KIS API Connection - Now using the real component */}
             <ApiKeySettings />
 
-            {/* Telegram Notifications */}
             <TelegramSettings />
+
+            <SlackSettings />
           </div>
         </div>
       </MainLayout>

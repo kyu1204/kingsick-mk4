@@ -71,6 +71,12 @@ class User(Base):
         nullable=True,
     )
 
+    # Slack integration fields
+    slack_webhook_url: Mapped[str | None] = mapped_column(
+        String(512),
+        nullable=True,
+    )
+
     # Relationships
     api_key: Mapped["UserApiKey | None"] = relationship(
         "UserApiKey",
