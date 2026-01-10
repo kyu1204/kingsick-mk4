@@ -346,13 +346,13 @@ async def telegram_webhook(
         action, alert_id = parsed
 
         # Import here to avoid circular import
-        from app.services.trading_engine import get_trading_engine
+        from app.services.trading_engine import AlertExpiredError, get_trading_engine
 
         trading_engine = get_trading_engine()
 
         if action == "approve":
             try:
-                result = trading_engine.approve_alert(alert_id)
+                result = await trading_engine.approve_alert(alert_id)
                 if result:
                     await telegram_service.answer_callback(
                         callback_id,
@@ -375,6 +375,19 @@ async def telegram_webhook(
                         "⚠️ 알림을 찾을 수 없거나 이미 처리되었습니다.",
                         show_alert=True,
                     )
+            except AlertExpiredError as e:
+                logger.warning(f"Alert expired: {alert_id}")
+                await telegram_service.answer_callback(
+                    callback_id,
+                    f"⏰ {str(e)}",
+                    show_alert=True,
+                )
+                await telegram_service.edit_message_after_action(
+                    chat_id,
+                    message_id,
+                    "expired",
+                    "알림이 만료되었습니다 (5분 초과)",
+                )
             except Exception as e:
                 logger.error(f"Failed to approve alert: {e}")
                 await telegram_service.answer_callback(

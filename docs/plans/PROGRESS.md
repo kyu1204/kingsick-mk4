@@ -1,7 +1,7 @@
 # KingSick 개발 진행 상황
 
 > **마지막 업데이트**: 2026-01-10
-> **현재 Phase**: Phase 3 진행중 (Watchlist)
+> **현재 Phase**: Phase 3 진행중 (Alert Execution 완료, Slack 대기)
 > **담당자**: 장비 이동 시에도 이 문서를 통해 작업 상태 추적
 
 ---
@@ -103,6 +103,7 @@
 > **설계 문서**:
 > - Watchlist: `docs/plans/2026-01-10-phase3-watchlist-design.md`
 > - Telegram: `docs/plans/2026-01-10-phase3-telegram-design.md`
+> - Alert Execution: `docs/plans/2026-01-10-phase3-alert-execution-design.md`
 
 ### 전체 Task 목록
 
@@ -112,7 +113,7 @@
 | 3-2 | AI 자동 스캔 (옵션) | ⏳ 대기 | P3 |
 | 3-3 | Telegram Bot 연동 | ✅ 완료 | P1 |
 | 3-4 | Slack Webhook 연동 | ⏳ 대기 | P2 |
-| 3-5 | 알림 승인 → 주문 실행 연결 | ⏳ 대기 | P1 |
+| 3-5 | 알림 승인 → 주문 실행 연결 | ✅ 완료 | P1 |
 
 ### Task 3-1: Watchlist 상세 ✅
 
@@ -164,6 +165,36 @@
 - [x] Frontend 테스트 16개 통과
 - [x] 브라우저 E2E 테스트 완료 (401→200 인증 수정)
 
+### Task 3-5: Alert Approval → Order Execution ✅
+
+| # | Task | 상태 | 설명 |
+|---|------|------|------|
+| 3-5-1 | approve_alert() 구현 | ✅ 완료 | KIS API 주문 실행 |
+| 3-5-2 | reject_alert() 구현 | ✅ 완료 | 알림 거절 처리 |
+| 3-5-3 | Webhook 콜백 처리 | ✅ 완료 | 버튼 클릭 → approve/reject 호출 |
+| 3-5-4 | 결과 메시지 편집 | ✅ 완료 | 성공/실패 메시지 표시 |
+| 3-5-5 | 에러 핸들링 | ✅ 완료 | KIS API 실패, 알림 없음 등 |
+| 3-5-6 | await 버그 수정 | ✅ 완료 | telegram.py:355 수정 |
+
+### 검증 체크리스트 - Alert Execution
+
+- [x] approve_alert()가 KIS API로 주문 실행
+- [x] reject_alert()가 알림 제거
+- [x] Webhook에서 콜백 버튼 클릭 처리
+- [x] 성공/실패 결과 메시지 표시
+- [x] 에러 핸들링 (알림 없음, 주문 실패)
+- [x] await 누락 버그 수정 완료
+- [x] Alert Expiry 구현 (5분 타임아웃) ✅
+
+### 개선 필요 사항 (Backlog)
+
+| # | Task | 우선순위 | 설명 |
+|---|------|----------|------|
+| 3-5-7 | Alert Expiry | ✅ 완료 | 5분 타임아웃 구현 |
+| 3-5-8 | 영구 저장소 | P2 | Redis로 pending alerts 저장 |
+| 3-5-9 | 주문 체결 확인 | P3 | 체결 여부 조회 API 연동 |
+| 3-5-10 | 동시성 처리 | P2 | 중복 클릭 방지 락 |
+
 ---
 
 ## Phase 4: 고도화 ⏳
@@ -212,6 +243,8 @@ cat docs/plans/PROGRESS.md
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-01-10 | Task 3-5-7 완료 - Alert Expiry 구현 (5분 타임아웃 + 만료 메시지 + 테스트 5개) |
+| 2026-01-10 | Task 3-5 완료 - Alert Execution 설계 문서 작성 + await 버그 수정 |
 | 2026-01-10 | Task 3-3 완료 - Telegram Bot 연동 구현 (Backend + Frontend + 테스트) |
 | 2026-01-10 | Task 3-3 설계 완료 - Telegram Bot 연동 설계 문서 작성 |
 | 2026-01-10 | Task 3-1 완료 - Watchlist 기능 구현 (모델, 서비스, API, Frontend, Trading Engine 연동) |

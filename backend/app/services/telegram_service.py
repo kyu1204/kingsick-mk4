@@ -234,6 +234,8 @@ class TelegramService:
 
         if action == "approved":
             new_text = f"✅ <b>주문 실행 완료</b>\n\n{result_text}"
+        elif action == "expired":
+            new_text = f"⏰ <b>알림 만료</b>\n\n{result_text}"
         else:
             new_text = f"❌ <b>알림 거절됨</b>\n\n{result_text}"
 

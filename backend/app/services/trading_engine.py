@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import TYPE_CHECKING
 
@@ -41,6 +41,15 @@ from app.services.risk_manager import (
 from app.services.signal_generator import SignalGenerator, SignalType, TradingSignal
 
 logger = logging.getLogger(__name__)
+
+# Alert expiry duration (5 minutes)
+ALERT_EXPIRY_MINUTES = 5
+
+
+class AlertExpiredError(Exception):
+    """Exception raised when an alert has expired."""
+
+    pass
 
 
 class TradingMode(Enum):
@@ -101,7 +110,7 @@ class AlertInfo:
     current_price: float
     suggested_quantity: int
     position: Position | None = None
-    created_at: datetime = field(default_factory=datetime.now)
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 class TradingEngine:
@@ -637,11 +646,23 @@ class TradingEngine:
 
         Returns:
             Dict with order result info if successful, None if alert not found
+
+        Raises:
+            AlertExpiredError: If the alert has expired (older than 5 minutes)
         """
-        alert = self._pending_alerts.pop(alert_id, None)
+        alert = self._pending_alerts.get(alert_id)
         if not alert:
             logger.warning(f"Alert not found: {alert_id}")
             return None
+
+        now = datetime.now(UTC)
+        alert_created = alert.created_at.replace(tzinfo=UTC) if alert.created_at.tzinfo is None else alert.created_at
+        if now - alert_created > timedelta(minutes=ALERT_EXPIRY_MINUTES):
+            self._pending_alerts.pop(alert_id, None)
+            logger.warning(f"Alert expired: {alert_id}, created_at={alert.created_at}")
+            raise AlertExpiredError(f"알림이 만료되었습니다 ({ALERT_EXPIRY_MINUTES}분 초과)")
+
+        self._pending_alerts.pop(alert_id, None)
 
         if alert.signal_type == SignalType.BUY:
             order_result = await self._kis_client.place_order(
@@ -696,6 +717,31 @@ class TradingEngine:
             }
         logger.warning(f"Alert not found for rejection: {alert_id}")
         return None
+
+    def cleanup_expired_alerts(self) -> int:
+        """Remove expired alerts from pending alerts.
+
+        Returns:
+            Number of alerts removed
+        """
+        now = datetime.now(UTC)
+        expiry_threshold = timedelta(minutes=ALERT_EXPIRY_MINUTES)
+        expired_ids = []
+
+        for alert_id, alert in self._pending_alerts.items():
+            alert_created = (
+                alert.created_at.replace(tzinfo=UTC)
+                if alert.created_at.tzinfo is None
+                else alert.created_at
+            )
+            if now - alert_created > expiry_threshold:
+                expired_ids.append(alert_id)
+
+        for alert_id in expired_ids:
+            self._pending_alerts.pop(alert_id, None)
+            logger.info(f"Expired alert cleaned up: {alert_id}")
+
+        return len(expired_ids)
 
     def set_daily_pnl(self, pnl_pct: float) -> None:
         """Set the daily P&L percentage for risk checks.

@@ -1608,3 +1608,177 @@ class TestEdgeCases:
 
         # Trailing stop should be removed after successful sell
         assert "005930" not in engine._trailing_stops
+
+
+class TestAlertExpiry:
+    """Tests for alert expiry functionality."""
+
+    @pytest.mark.asyncio
+    async def test_approve_alert_success_within_expiry(
+        self,
+        mock_kis_client: AsyncMock,
+        mock_signal_generator: MagicMock,
+        mock_risk_manager: MagicMock,
+        sample_buy_signal: TradingSignal,
+    ):
+        """Approve alert within 5 minutes should execute order."""
+        from datetime import UTC, datetime
+
+        mock_kis_client.place_order.return_value = OrderResult(
+            success=True,
+            order_id="ORD001",
+            message="Order executed",
+            status=OrderStatus.PENDING,
+        )
+
+        engine = TradingEngine(
+            mode=TradingMode.ALERT,
+            kis_client=mock_kis_client,
+            signal_generator=mock_signal_generator,
+            risk_manager=mock_risk_manager,
+        )
+
+        alert = AlertInfo(
+            alert_id="test-alert-1",
+            user_id="user-1",
+            stock_code="005930",
+            stock_name="Samsung",
+            signal=sample_buy_signal,
+            signal_type=SignalType.BUY,
+            current_price=70000,
+            suggested_quantity=10,
+            created_at=datetime.now(UTC),
+        )
+        engine._pending_alerts["test-alert-1"] = alert
+
+        result = await engine.approve_alert("test-alert-1")
+
+        assert result is not None
+        assert result["success"] is True
+        assert result["stock_code"] == "005930"
+        mock_kis_client.place_order.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_approve_alert_expired_raises_error(
+        self,
+        mock_kis_client: AsyncMock,
+        mock_signal_generator: MagicMock,
+        mock_risk_manager: MagicMock,
+        sample_buy_signal: TradingSignal,
+    ):
+        """Approve alert after 5 minutes should raise AlertExpiredError."""
+        from datetime import UTC, datetime, timedelta
+        from app.services.trading_engine import AlertExpiredError
+
+        engine = TradingEngine(
+            mode=TradingMode.ALERT,
+            kis_client=mock_kis_client,
+            signal_generator=mock_signal_generator,
+            risk_manager=mock_risk_manager,
+        )
+
+        alert = AlertInfo(
+            alert_id="test-alert-2",
+            user_id="user-1",
+            stock_code="005930",
+            stock_name="Samsung",
+            signal=sample_buy_signal,
+            signal_type=SignalType.BUY,
+            current_price=70000,
+            suggested_quantity=10,
+            created_at=datetime.now(UTC) - timedelta(minutes=6),
+        )
+        engine._pending_alerts["test-alert-2"] = alert
+
+        with pytest.raises(AlertExpiredError):
+            await engine.approve_alert("test-alert-2")
+
+        assert "test-alert-2" not in engine._pending_alerts
+        mock_kis_client.place_order.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_approve_alert_not_found_returns_none(
+        self,
+        mock_kis_client: AsyncMock,
+        mock_signal_generator: MagicMock,
+        mock_risk_manager: MagicMock,
+    ):
+        """Approve non-existent alert should return None."""
+        engine = TradingEngine(
+            mode=TradingMode.ALERT,
+            kis_client=mock_kis_client,
+            signal_generator=mock_signal_generator,
+            risk_manager=mock_risk_manager,
+        )
+
+        result = await engine.approve_alert("non-existent")
+
+        assert result is None
+        mock_kis_client.place_order.assert_not_called()
+
+    def test_cleanup_expired_alerts(
+        self,
+        mock_kis_client: AsyncMock,
+        mock_signal_generator: MagicMock,
+        mock_risk_manager: MagicMock,
+        sample_buy_signal: TradingSignal,
+    ):
+        """cleanup_expired_alerts removes only expired alerts."""
+        from datetime import UTC, datetime, timedelta
+
+        engine = TradingEngine(
+            mode=TradingMode.ALERT,
+            kis_client=mock_kis_client,
+            signal_generator=mock_signal_generator,
+            risk_manager=mock_risk_manager,
+        )
+
+        fresh_alert = AlertInfo(
+            alert_id="fresh",
+            user_id="user-1",
+            stock_code="005930",
+            stock_name="Samsung",
+            signal=sample_buy_signal,
+            signal_type=SignalType.BUY,
+            current_price=70000,
+            suggested_quantity=10,
+            created_at=datetime.now(UTC),
+        )
+        expired_alert = AlertInfo(
+            alert_id="expired",
+            user_id="user-1",
+            stock_code="000660",
+            stock_name="SK Hynix",
+            signal=sample_buy_signal,
+            signal_type=SignalType.BUY,
+            current_price=150000,
+            suggested_quantity=5,
+            created_at=datetime.now(UTC) - timedelta(minutes=10),
+        )
+
+        engine._pending_alerts["fresh"] = fresh_alert
+        engine._pending_alerts["expired"] = expired_alert
+
+        removed_count = engine.cleanup_expired_alerts()
+
+        assert removed_count == 1
+        assert "fresh" in engine._pending_alerts
+        assert "expired" not in engine._pending_alerts
+
+    def test_cleanup_expired_alerts_empty(
+        self,
+        mock_kis_client: AsyncMock,
+        mock_signal_generator: MagicMock,
+        mock_risk_manager: MagicMock,
+    ):
+        """cleanup_expired_alerts with no alerts returns 0."""
+        engine = TradingEngine(
+            mode=TradingMode.ALERT,
+            kis_client=mock_kis_client,
+            signal_generator=mock_signal_generator,
+            risk_manager=mock_risk_manager,
+        )
+
+        removed_count = engine.cleanup_expired_alerts()
+
+        assert removed_count == 0
