@@ -1,15 +1,58 @@
 'use client';
 
+import * as React from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
+import { Search, Loader2, AlertCircle } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth';
 import { ScannerPanel } from '@/components/scanner';
+import { analysisApi, type StockScoreResponse } from '@/lib/api/analysis';
+import { SignalStrengthGauge, IndicatorContribution, type Contribution } from '@/components/analysis';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { formatKRW, formatPercent } from '@/lib/utils';
+import { ApiError } from '@/lib/api/client';
 
 export default function AnalysisPage() {
+  const [query, setQuery] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const [result, setResult] = React.useState<StockScoreResponse | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const data = await analysisApi.getStockScore(query);
+      setResult(data);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message || 'Failed to fetch analysis');
+      } else {
+        setError('An unexpected error occurred');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getContributions = (scores: StockScoreResponse['indicator_scores']): Contribution[] => {
+    return [
+      { name: 'Trend', score: scores.trend_score, weight: 20 },
+      { name: 'RSI', score: scores.rsi_score, weight: 30 },
+      { name: 'MACD', score: scores.macd_score, weight: 20 },
+      { name: 'Bollinger', score: scores.bollinger_score, weight: 15 },
+      { name: 'Volume', score: scores.volume_score, weight: 15 },
+    ].sort((a, b) => b.score - a.score);
+  };
+
   return (
     <ProtectedRoute>
       <MainLayout>
@@ -25,8 +68,6 @@ export default function AnalysisPage() {
             <ScannerPanel />
           </div>
 
-          {/* Stock Search */}
-
           <Card>
             <CardHeader>
               <CardTitle>Stock Analysis</CardTitle>
@@ -35,117 +76,102 @@ export default function AnalysisPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-2">
+              <form onSubmit={handleSearch} className="flex gap-2">
                 <Input
-                  placeholder="Enter stock code or name (e.g., 005930, Samsung)"
+                  placeholder="Enter stock code (e.g., 005930)"
                   className="flex-1"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
                 />
-                <Button>
-                  <Search className="h-4 w-4 mr-2" />
+                <Button type="submit" disabled={loading}>
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
                   Analyze
                 </Button>
-              </div>
+              </form>
             </CardContent>
           </Card>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Technical Indicators */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Technical Indicators</CardTitle>
-                <CardDescription>
-                  Current indicator values for Samsung Electronics (005930)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { name: 'RSI (14)', value: '28.5', signal: 'Oversold', type: 'profit' },
-                    { name: 'MA (5)', value: '71,250', signal: 'Below', type: 'loss' },
-                    { name: 'MA (20)', value: '73,400', signal: 'Below', type: 'loss' },
-                    { name: 'MACD', value: '-450', signal: 'Bearish', type: 'loss' },
-                    { name: 'Bollinger Band', value: '70,800 - 76,200', signal: 'Near Lower', type: 'profit' },
-                    { name: 'Volume', value: '12.5M', signal: 'High', type: 'profit' },
-                  ].map((indicator) => (
-                    <div key={indicator.name} className="flex items-center justify-between py-2 border-b">
-                      <div>
-                        <p className="font-medium">{indicator.name}</p>
-                        <p className="text-sm text-muted-foreground">{indicator.value}</p>
-                      </div>
-                      <Badge variant={indicator.type === 'profit' ? 'profit' : indicator.type === 'loss' ? 'loss' : 'secondary'}>
-                        {indicator.signal}
-                      </Badge>
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {result && (
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card className="md:col-span-1">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>AI Signal Analysis</span>
+                    <Badge variant="outline">{result.stock_name} ({result.stock_code})</Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    BNF Strategy based signal generation
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  <SignalStrengthGauge 
+                    strength={result.score} 
+                    signal={result.signal} 
+                  />
+
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Indicator Contribution</h4>
+                    <IndicatorContribution contributions={getContributions(result.indicator_scores)} />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="md:col-span-1">
+                <CardHeader>
+                  <CardTitle>Analysis Details</CardTitle>
+                  <CardDescription>
+                    {new Date(result.analysis_date).toLocaleDateString()} Analysis
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Current Price</p>
+                      <p className="text-2xl font-bold">{formatKRW(result.current_price)}</p>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    <Badge variant={result.change_pct >= 0 ? "profit" : "loss"} className="text-lg px-3 py-1">
+                      {formatPercent(result.change_pct)}
+                    </Badge>
+                  </div>
 
-            {/* AI Signal */}
-            <Card>
-              <CardHeader>
-                <CardTitle>AI Signal Analysis</CardTitle>
-                <CardDescription>
-                  BNF Strategy based signal generation
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Signal Result */}
-                <div className="text-center p-6 bg-green-500/10 border border-green-500/20 rounded-lg">
-                  <Badge variant="profit" className="text-lg px-4 py-2 mb-2">
-                    BUY SIGNAL
-                  </Badge>
-                  <p className="text-2xl font-bold text-green-500">85%</p>
-                  <p className="text-sm text-muted-foreground">Confidence Score</p>
-                </div>
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium">Analysis Reasoning</h4>
+                    <ul className="space-y-2">
+                      {result.reasons.map((reason, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                          <span>{reason}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-                {/* Signal Factors */}
-                <div className="space-y-3">
-                  <p className="text-sm font-medium">Signal Factors:</p>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-green-500" />
-                      RSI below 30 (oversold condition)
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-green-500" />
-                      Price near lower Bollinger Band
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-green-500" />
-                      Volume spike detected (+45%)
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-yellow-500" />
-                      MACD histogram turning positive
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Suggested Action */}
-                <div className="p-4 bg-muted rounded-lg">
-                  <p className="text-sm font-medium mb-2">Suggested Action:</p>
-                  <p className="text-sm text-muted-foreground">
-                    Buy 100 shares at market price. Set stop-loss at 69,500 KRW (-4.1%)
-                    and take-profit at 78,000 KRW (+7.6%).
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Chart Placeholder */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Price Chart</CardTitle>
-              <CardDescription>
-                Candlestick chart with technical indicators
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-[400px] flex items-center justify-center border-2 border-dashed border-muted rounded-lg">
-              <p className="text-muted-foreground">TradingView Lightweight Chart will be implemented here</p>
-            </CardContent>
-          </Card>
+                  <div className="p-4 bg-muted rounded-lg border border-dashed">
+                    <p className="text-sm font-medium mb-1">Recommendation</p>
+                    <p className="text-sm text-muted-foreground">
+                      Based on the {result.signal.replace('_', ' ')} signal with a confidence score of {result.score.toFixed(0)}, 
+                      {result.score >= 70 ? ' accumulation is recommended.' : result.score <= 30 ? ' reducing exposure is advised.' : ' monitoring for clearer signals is suggested.'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+          
+          {!result && !loading && !error && (
+             <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
+               <Search className="h-12 w-12 mx-auto mb-4 opacity-20" />
+               <p>Enter a stock code above to generate an AI analysis report.</p>
+             </div>
+          )}
         </div>
       </MainLayout>
     </ProtectedRoute>
