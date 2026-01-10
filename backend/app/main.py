@@ -8,6 +8,7 @@ health check endpoints, and API router mounting.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.analysis import router as analysis_router
 from app.api.api_keys import router as api_keys_router
 from app.api.auth import router as auth_router
 from app.api.backtest import router as backtest_router
@@ -91,3 +92,4 @@ app.include_router(stocks_router, prefix="/api/v1")
 app.include_router(telegram_router, prefix="/api/v1")
 app.include_router(slack_router, prefix="/api/v1")
 app.include_router(backtest_router, prefix="/api/v1")
+app.include_router(analysis_router, prefix="/api/v1")
