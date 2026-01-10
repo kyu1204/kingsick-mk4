@@ -132,6 +132,51 @@ Critical test cases focus on:
 - Order execution flow
 - API error handling
 
+## 필수 검증 규칙 (MANDATORY - 반드시 준수)
+
+### 코드 변경 후 자동 실행 (트리거 규칙)
+
+**Backend 코드 변경 시 (app/ 디렉토리):**
+```bash
+cd backend && uv run pytest tests/ -v --tb=short
+cd backend && uv run ruff check app/
+```
+
+**Frontend 코드 변경 시 (frontend/ 디렉토리):**
+```bash
+cd frontend && npm run test -- --run
+cd frontend && npm run lint
+```
+
+⚠️ **위 명령어는 코드 변경 후 사용자 요청 없이도 자동으로 실행해야 함**
+
+### Task/Phase 완료 조건 (필수 체크리스트)
+
+Task를 "완료"로 표시하기 전 **모든 항목이 충족**되어야 함:
+
+```
+[ ] Backend 테스트 통과: uv run pytest tests/ -v
+[ ] Frontend 테스트 통과: npm run test -- --run
+[ ] Backend lint 통과: uv run ruff check app/
+[ ] Frontend lint 통과: npm run lint
+[ ] 브라우저 E2E 테스트 수행 (해당 기능)
+[ ] PROGRESS.md 업데이트
+```
+
+### 금지 사항
+
+❌ 테스트 실행 없이 Task 완료 표시
+❌ lint 에러 무시하고 커밋
+❌ "나중에 테스트" 약속하고 넘어가기
+❌ 사용자가 요청하지 않았다는 이유로 테스트 건너뛰기
+
+### 예외 상황
+
+다음 경우에만 테스트 생략 가능 (반드시 사용자에게 알림):
+- 문서만 수정한 경우 (*.md 파일)
+- 설정 파일만 수정한 경우 (환경변수 등)
+- 사용자가 명시적으로 테스트 생략 요청한 경우
+
 ## Environment Variables
 
 ```
