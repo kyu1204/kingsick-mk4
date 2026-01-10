@@ -6,10 +6,8 @@ Provides endpoints for:
 - Getting trade details
 """
 
-from datetime import datetime
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/trades", tags=["trades"])

@@ -5,7 +5,6 @@ Provides AES-256-GCM encryption/decryption for sensitive data like API keys.
 """
 
 import base64
-import os
 import secrets
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM

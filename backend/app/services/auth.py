@@ -6,7 +6,7 @@ Provides JWT token management and password hashing utilities.
 
 import secrets
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import bcrypt
@@ -89,14 +89,14 @@ def create_access_token(
     if expires_delta is None:
         expires_delta = timedelta(minutes=settings.access_token_expire_minutes)
 
-    expire = datetime.now(timezone.utc) + expires_delta
+    expire = datetime.now(UTC) + expires_delta
 
     to_encode: dict[str, Any] = {
         "sub": str(user_id),
         "is_admin": is_admin,
         "type": "access",
         "exp": expire,
-        "iat": datetime.now(timezone.utc),
+        "iat": datetime.now(UTC),
     }
 
     return jwt.encode(
@@ -125,13 +125,13 @@ def create_refresh_token(
     if expires_delta is None:
         expires_delta = timedelta(days=settings.refresh_token_expire_days)
 
-    expire = datetime.now(timezone.utc) + expires_delta
+    expire = datetime.now(UTC) + expires_delta
 
     to_encode: dict[str, Any] = {
         "sub": str(user_id),
         "type": "refresh",
         "exp": expire,
-        "iat": datetime.now(timezone.utc),
+        "iat": datetime.now(UTC),
     }
 
     return jwt.encode(
@@ -337,6 +337,6 @@ async def create_user(
 
     # Mark invitation as used
     invitation.used_by = user.id
-    invitation.used_at = datetime.now(timezone.utc)
+    invitation.used_at = datetime.now(UTC)
 
     return user

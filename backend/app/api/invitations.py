@@ -4,7 +4,7 @@ Invitations API router for KingSick.
 Provides endpoints for admin users to manage invitation links.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -83,7 +83,7 @@ async def create_invitation(
     Only admin users can create invitations.
     """
     code = generate_invitation_code()
-    expires_at = datetime.now(timezone.utc) + timedelta(days=request.expires_in_days)
+    expires_at = datetime.now(UTC) + timedelta(days=request.expires_in_days)
 
     invitation = Invitation(
         code=code,

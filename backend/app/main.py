@@ -14,10 +14,10 @@ from app.api.indicators import router as indicators_router
 from app.api.invitations import router as invitations_router
 from app.api.positions import router as positions_router
 from app.api.signals import router as signals_router
+from app.api.stocks import router as stocks_router
 from app.api.trades import router as trades_router
 from app.api.trading import router as trading_router
 from app.api.users import router as users_router
-from app.api.stocks import router as stocks_router
 from app.api.watchlist import router as watchlist_router
 from app.config import get_settings
 
