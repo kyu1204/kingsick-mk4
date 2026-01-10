@@ -110,7 +110,7 @@
 |---|------|------|----------|
 | 3-1 | 종목 직접 지정 (Watchlist) | ✅ 완료 | P1 |
 | 3-2 | AI 자동 스캔 (옵션) | ⏳ 대기 | P3 |
-| 3-3 | Telegram Bot 연동 | 🔄 진행중 | P1 |
+| 3-3 | Telegram Bot 연동 | ✅ 완료 | P1 |
 | 3-4 | Slack Webhook 연동 | ⏳ 대기 | P2 |
 | 3-5 | 알림 승인 → 주문 실행 연결 | ⏳ 대기 | P1 |
 
@@ -140,18 +140,29 @@
 - [x] Trading Engine에서 Watchlist 종목 조회
 - [x] E2E 브라우저 테스트 완료
 
-### Task 3-3: Telegram Bot 연동 🔄
+### Task 3-3: Telegram Bot 연동 ✅
 
 | # | Task | 상태 | 설명 |
 |---|------|------|------|
-| 3-3-1 | 의존성 추가 | ⏳ 대기 | python-telegram-bot 설치 |
-| 3-3-2 | User 모델 확장 | ⏳ 대기 | telegram_chat_id 필드 + 마이그레이션 |
-| 3-3-3 | TelegramLinkToken 모델 | ⏳ 대기 | Deep Link 토큰 모델 |
-| 3-3-4 | TelegramService | ⏳ 대기 | 메시지 전송, 콜백 처리 |
-| 3-3-5 | Telegram API 라우터 | ⏳ 대기 | webhook, link, status |
-| 3-3-6 | TradingEngine 연동 | ⏳ 대기 | 알림 시 Telegram 전송 |
-| 3-3-7 | Frontend Settings UI | ⏳ 대기 | Telegram 연동 버튼 |
-| 3-3-8 | 테스트 작성 | ⏳ 대기 | 단위/통합 테스트 |
+| 3-3-1 | 의존성 추가 | ✅ 완료 | python-telegram-bot 설치 |
+| 3-3-2 | User 모델 확장 | ✅ 완료 | telegram_chat_id 필드 + 마이그레이션 |
+| 3-3-3 | TelegramLinkToken 모델 | ✅ 완료 | Deep Link 토큰 모델 |
+| 3-3-4 | TelegramService | ✅ 완료 | 메시지 전송, 콜백 처리 |
+| 3-3-5 | Telegram API 라우터 | ✅ 완료 | webhook, link, status |
+| 3-3-6 | TradingEngine 연동 | ✅ 완료 | 알림 시 Telegram 전송 |
+| 3-3-7 | Frontend Settings UI | ✅ 완료 | Telegram 연동 버튼 |
+| 3-3-8 | 테스트 작성 | ✅ 완료 | 단위/통합 테스트 (39 backend + 16 frontend) |
+
+### 검증 체크리스트 - Telegram Bot
+
+- [x] TelegramService 메시지 전송/콜백 처리 구현
+- [x] Telegram API 라우터 (status, link, unlink, webhook)
+- [x] TelegramLinkToken 모델 및 Deep Link 연동 흐름
+- [x] TradingEngine에서 Telegram 알림 전송 연동
+- [x] Frontend TelegramSettings 컴포넌트 구현
+- [x] Backend 테스트 39개 통과
+- [x] Frontend 테스트 16개 통과
+- [x] 브라우저 E2E 테스트 완료 (401→200 인증 수정)
 
 ---
 
@@ -201,6 +212,7 @@ cat docs/plans/PROGRESS.md
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-01-10 | Task 3-3 완료 - Telegram Bot 연동 구현 (Backend + Frontend + 테스트) |
 | 2026-01-10 | Task 3-3 설계 완료 - Telegram Bot 연동 설계 문서 작성 |
 | 2026-01-10 | Task 3-1 완료 - Watchlist 기능 구현 (모델, 서비스, API, Frontend, Trading Engine 연동) |
 | 2026-01-10 | Phase 3 시작 - Watchlist 설계 완료, Task 3-1 진행중 |
