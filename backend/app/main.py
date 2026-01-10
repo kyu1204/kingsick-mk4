@@ -13,6 +13,7 @@ from app.api.auth import router as auth_router
 from app.api.indicators import router as indicators_router
 from app.api.invitations import router as invitations_router
 from app.api.positions import router as positions_router
+from app.api.scanner import router as scanner_router
 from app.api.signals import router as signals_router
 from app.api.slack import router as slack_router
 from app.api.stocks import router as stocks_router
@@ -80,6 +81,7 @@ app.include_router(invitations_router, prefix="/api/v1")
 app.include_router(api_keys_router, prefix="/api/v1")
 app.include_router(indicators_router, prefix="/api/v1")
 app.include_router(positions_router, prefix="/api/v1")
+app.include_router(scanner_router, prefix="/api/v1")
 app.include_router(signals_router, prefix="/api/v1")
 app.include_router(trades_router, prefix="/api/v1")
 app.include_router(trading_router, prefix="/api/v1")

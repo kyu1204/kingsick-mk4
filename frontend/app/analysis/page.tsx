@@ -7,13 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth';
+import { ScannerPanel } from '@/components/scanner';
 
 export default function AnalysisPage() {
   return (
     <ProtectedRoute>
       <MainLayout>
         <div className="space-y-6">
-          {/* Page Header */}
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Analysis</h1>
             <p className="text-muted-foreground">
@@ -21,7 +21,12 @@ export default function AnalysisPage() {
             </p>
           </div>
 
+          <div className="mb-8">
+            <ScannerPanel />
+          </div>
+
           {/* Stock Search */}
+
           <Card>
             <CardHeader>
               <CardTitle>Stock Analysis</CardTitle>

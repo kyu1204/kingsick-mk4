@@ -109,3 +109,5 @@ export type {
   SlackWebhookRequest,
   SlackMessageResponse,
 } from './slack';
+
+export { scannerApi } from './scanner';

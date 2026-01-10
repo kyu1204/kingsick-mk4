@@ -235,3 +235,38 @@ export interface DailyPriceResponse {
 export interface ErrorResponse {
   detail: string;
 }
+
+// ============================================================
+// Scanner Types
+// ============================================================
+
+export type ScanTypeEnum = 'BUY' | 'SELL';
+
+export interface ScanResultResponse {
+  stock_code: string;
+  stock_name: string;
+  signal: string;
+  confidence: number;
+  current_price: number;
+  rsi: number;
+  volume_spike: boolean;
+  reasoning: string[];
+}
+
+export interface ScanResponse {
+  results: ScanResultResponse[];
+  total: number;
+  scan_type: string;
+  min_confidence: number;
+}
+
+export interface StockInfo {
+  code: string;
+  name: string;
+}
+
+export interface StockUniverseResponse {
+  kospi: StockInfo[];
+  kosdaq: StockInfo[];
+  total: number;
+}
