@@ -6,13 +6,14 @@ Provides market state analysis, sector performance, and trading recommendations.
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user
 from app.database import get_db
 from app.models.user import User
+from app.services.ai_recommender import AIRecommender, StockRecommendation
 from app.services.market_analyzer import (
     InsufficientDataError,
     MarketAnalyzer,
@@ -213,3 +214,187 @@ async def get_stock_market_state(
         ),
         analysis_date=state.analysis_date.isoformat(),
     )
+
+
+class IndicatorScoresResponse(BaseModel):
+    """Indicator scores breakdown."""
+
+    rsi_score: float
+    macd_score: float
+    volume_score: float
+    trend_score: float
+    bollinger_score: float
+
+
+class StockRecommendationResponse(BaseModel):
+    """Stock recommendation response."""
+
+    stock_code: str
+    stock_name: str
+    current_price: float
+    change_pct: float
+    score: float
+    signal: str
+    indicator_scores: IndicatorScoresResponse
+    reasons: list[str]
+    analysis_date: str
+
+
+class RecommendationsResponse(BaseModel):
+    """List of stock recommendations."""
+
+    recommendations: list[StockRecommendationResponse]
+    total: int
+    analysis_date: str
+
+
+def _convert_recommendation(rec: StockRecommendation) -> StockRecommendationResponse:
+    """Convert StockRecommendation dataclass to response model."""
+    return StockRecommendationResponse(
+        stock_code=rec.stock_code,
+        stock_name=rec.stock_name,
+        current_price=rec.current_price,
+        change_pct=rec.change_pct,
+        score=rec.score,
+        signal=rec.signal.value,
+        indicator_scores=IndicatorScoresResponse(
+            rsi_score=rec.indicator_scores.rsi_score,
+            macd_score=rec.indicator_scores.macd_score,
+            volume_score=rec.indicator_scores.volume_score,
+            trend_score=rec.indicator_scores.trend_score,
+            bollinger_score=rec.indicator_scores.bollinger_score,
+        ),
+        reasons=rec.reasons,
+        analysis_date=rec.analysis_date.isoformat(),
+    )
+
+
+@router.get("/recommend", response_model=RecommendationsResponse)
+async def get_recommendations(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    top_n: Annotated[int, Query(ge=1, le=50)] = 10,
+    target_date: date | None = None,
+) -> RecommendationsResponse:
+    """Get AI stock recommendations.
+
+    Returns top-ranked stocks based on BNF strategy scoring.
+    Uses user's watchlist if available, otherwise analyzes available stocks.
+
+    Args:
+        top_n: Number of recommendations to return (1-50)
+        target_date: Optional target date for analysis
+
+    Returns:
+        RecommendationsResponse with ranked stock recommendations
+    """
+    recommender = AIRecommender(db)
+    recs = await recommender.get_recommendations(
+        user_id=str(current_user.id),
+        top_n=top_n,
+        target_date=target_date,
+    )
+
+    return RecommendationsResponse(
+        recommendations=[_convert_recommendation(r) for r in recs],
+        total=len(recs),
+        analysis_date=(target_date or date.today()).isoformat(),
+    )
+
+
+@router.get("/recommend/buy", response_model=RecommendationsResponse)
+async def get_buy_signals(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    top_n: Annotated[int, Query(ge=1, le=50)] = 10,
+    target_date: date | None = None,
+) -> RecommendationsResponse:
+    """Get stocks with buy signals only.
+
+    Filters recommendations to show only BUY and STRONG_BUY signals.
+
+    Args:
+        top_n: Number of recommendations
+        target_date: Optional target date
+
+    Returns:
+        RecommendationsResponse with buy signals only
+    """
+    recommender = AIRecommender(db)
+    recs = await recommender.get_buy_signals(
+        user_id=str(current_user.id),
+        top_n=top_n,
+        target_date=target_date,
+    )
+
+    return RecommendationsResponse(
+        recommendations=[_convert_recommendation(r) for r in recs],
+        total=len(recs),
+        analysis_date=(target_date or date.today()).isoformat(),
+    )
+
+
+@router.get("/recommend/sell", response_model=RecommendationsResponse)
+async def get_sell_signals(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    top_n: Annotated[int, Query(ge=1, le=50)] = 10,
+    target_date: date | None = None,
+) -> RecommendationsResponse:
+    """Get stocks with sell signals only.
+
+    Filters recommendations to show only SELL and STRONG_SELL signals.
+
+    Args:
+        top_n: Number of recommendations
+        target_date: Optional target date
+
+    Returns:
+        RecommendationsResponse with sell signals only
+    """
+    recommender = AIRecommender(db)
+    recs = await recommender.get_sell_signals(
+        user_id=str(current_user.id),
+        top_n=top_n,
+        target_date=target_date,
+    )
+
+    return RecommendationsResponse(
+        recommendations=[_convert_recommendation(r) for r in recs],
+        total=len(recs),
+        analysis_date=(target_date or date.today()).isoformat(),
+    )
+
+
+@router.get("/stock/{stock_code}/score", response_model=StockRecommendationResponse)
+async def get_stock_score(
+    stock_code: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    target_date: date | None = None,
+) -> StockRecommendationResponse:
+    """Get AI score for a specific stock.
+
+    Analyzes the stock using BNF strategy indicators and returns
+    a detailed score breakdown with buy/sell recommendation.
+
+    Args:
+        stock_code: Stock code to analyze
+        target_date: Optional target date
+
+    Returns:
+        StockRecommendationResponse with score and recommendation
+
+    Raises:
+        404: Insufficient data for analysis
+    """
+    recommender = AIRecommender(db)
+    rec = await recommender.score_stock(stock_code, target_date)
+
+    if rec is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Insufficient data for stock {stock_code}. Need at least 60 days of price data.",
+        )
+
+    return _convert_recommendation(rec)
