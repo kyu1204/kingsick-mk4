@@ -59,6 +59,18 @@ class User(Base):
         nullable=False,
     )
 
+    # Telegram integration fields
+    telegram_chat_id: Mapped[str | None] = mapped_column(
+        String(50),
+        unique=True,
+        nullable=True,
+        index=True,
+    )
+    telegram_linked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
     # Relationships
     api_key: Mapped["UserApiKey | None"] = relationship(
         "UserApiKey",
@@ -74,6 +86,11 @@ class User(Base):
     )
     watchlist_items: Mapped[list["WatchlistItem"]] = relationship(  # noqa: F821
         "WatchlistItem",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    telegram_link_tokens: Mapped[list["TelegramLinkToken"]] = relationship(  # noqa: F821
+        "TelegramLinkToken",
         back_populates="user",
         cascade="all, delete-orphan",
     )

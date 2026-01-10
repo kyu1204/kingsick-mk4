@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ApiKeySettings } from '@/components/settings';
+import { ApiKeySettings, TelegramSettings } from '@/components/settings';
 import { ProtectedRoute } from '@/components/auth';
 import { tradingApi, TradingMode, RiskSettingsResponse } from '@/lib/api/trading';
 
@@ -217,38 +217,8 @@ export default function SettingsPage() {
             {/* KIS API Connection - Now using the real component */}
             <ApiKeySettings />
 
-            {/* Notifications */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Notifications</CardTitle>
-                <CardDescription>
-                  Configure alert channels and preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Telegram</p>
-                    <p className="text-sm text-muted-foreground">
-                      @kingsick_trading_bot
-                    </p>
-                  </div>
-                  <Badge variant="profit">Connected</Badge>
-                </div>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Slack</p>
-                    <p className="text-sm text-muted-foreground">
-                      #trading-alerts
-                    </p>
-                  </div>
-                  <Badge variant="secondary">Not Connected</Badge>
-                </div>
-                <Button variant="outline" className="w-full">
-                  Manage Notifications
-                </Button>
-              </CardContent>
-            </Card>
+            {/* Telegram Notifications */}
+            <TelegramSettings />
           </div>
         </div>
       </MainLayout>

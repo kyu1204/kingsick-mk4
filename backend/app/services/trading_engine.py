@@ -9,13 +9,20 @@ The engine integrates:
 - KIS API client for market data and order execution
 - Signal generator for AI-based trading signals
 - Risk manager for position risk assessment
+- Telegram service for alert notifications
 """
+
+from __future__ import annotations
 
 import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.services.telegram_service import TelegramService
 
 from app.services.kis_api import (
     KISApiClient,
@@ -74,7 +81,9 @@ class AlertInfo:
 
     Attributes:
         alert_id: Unique identifier for the alert
+        user_id: User ID who owns this alert
         stock_code: Stock code for the alert
+        stock_name: Stock name for display
         signal: Trading signal that triggered the alert
         signal_type: Type of signal (BUY/SELL)
         current_price: Price at the time of alert
@@ -84,7 +93,9 @@ class AlertInfo:
     """
 
     alert_id: str
+    user_id: str
     stock_code: str
+    stock_name: str
     signal: TradingSignal
     signal_type: SignalType
     current_price: float
@@ -116,6 +127,7 @@ class TradingEngine:
         kis_client: KISApiClient,
         signal_generator: SignalGenerator,
         risk_manager: RiskManager,
+        telegram_service: TelegramService | None = None,
     ) -> None:
         """Initialize the trading engine.
 
@@ -124,14 +136,20 @@ class TradingEngine:
             kis_client: KIS API client instance
             signal_generator: Signal generator instance
             risk_manager: Risk manager instance
+            telegram_service: Telegram service instance for alert notifications
         """
         self.mode = mode
         self._kis_client = kis_client
         self._signal_generator = signal_generator
         self._risk_manager = risk_manager
+        self._telegram_service = telegram_service
         self._trailing_stops: dict[str, TrailingStop] = {}
         self._pending_alerts: dict[str, AlertInfo] = {}
         self._daily_pnl_pct: float = 0.0
+        # Context for current trading loop
+        self._current_user_id: str | None = None
+        self._current_telegram_chat_id: str | None = None
+        self._stock_names: dict[str, str] = {}
 
     def set_mode(self, mode: TradingMode) -> None:
         """Change the trading mode.
@@ -172,6 +190,9 @@ class TradingEngine:
         self,
         watchlist: list[str],
         positions: list[Position],
+        user_id: str | None = None,
+        telegram_chat_id: str | None = None,
+        stock_names: dict[str, str] | None = None,
     ) -> TradingLoopResult:
         """Execute the main trading loop.
 
@@ -184,10 +205,16 @@ class TradingEngine:
         Args:
             watchlist: List of stock codes to monitor
             positions: List of current positions
+            user_id: User ID for alert ownership (required in ALERT mode)
+            telegram_chat_id: User's Telegram chat ID for notifications
+            stock_names: Mapping of stock codes to stock names
 
         Returns:
             TradingLoopResult with execution statistics
         """
+        self._current_user_id = user_id
+        self._current_telegram_chat_id = telegram_chat_id
+        self._stock_names = stock_names or {}
         result = TradingLoopResult(
             processed_stocks=0,
             signals_generated=0,
@@ -448,9 +475,12 @@ class TradingEngine:
             return order_result
 
         else:  # ALERT mode
+            stock_name = self._stock_names.get(stock_code, stock_code)
             alert = AlertInfo(
                 alert_id=str(uuid.uuid4()),
+                user_id=self._current_user_id or "",
                 stock_code=stock_code,
+                stock_name=stock_name,
                 signal=signal,
                 signal_type=SignalType.BUY,
                 current_price=current_price,
@@ -459,6 +489,10 @@ class TradingEngine:
             self._pending_alerts[alert.alert_id] = alert
             result.alerts_sent += 1
             logger.info(f"Buy alert created: {stock_code}, alert_id={alert.alert_id}")
+
+            # Send Telegram notification if available
+            await self._send_telegram_alert(alert)
+
             return None
 
     async def _execute_sell(
@@ -500,9 +534,12 @@ class TradingEngine:
             return order_result
 
         else:  # ALERT mode
+            stock_name = self._stock_names.get(stock_code, stock_code)
             alert = AlertInfo(
                 alert_id=str(uuid.uuid4()),
+                user_id=self._current_user_id or "",
                 stock_code=stock_code,
+                stock_name=stock_name,
                 signal=signal,
                 signal_type=SignalType.SELL,
                 current_price=position.current_price,
@@ -512,6 +549,10 @@ class TradingEngine:
             self._pending_alerts[alert.alert_id] = alert
             result.alerts_sent += 1
             logger.info(f"Sell alert created: {stock_code}, alert_id={alert.alert_id}")
+
+            # Send Telegram notification if available
+            await self._send_telegram_alert(alert)
+
             return None
 
     async def process_buy_signal(
@@ -588,14 +629,14 @@ class TradingEngine:
             trailing_stop=trailing_stop,
         )
 
-    async def approve_alert(self, alert_id: str) -> OrderResult | None:
+    async def approve_alert(self, alert_id: str) -> dict[str, str | int | float | bool] | None:
         """Approve a pending alert and execute the order.
 
         Args:
             alert_id: ID of the alert to approve
 
         Returns:
-            OrderResult if order executed successfully, None if alert not found
+            Dict with order result info if successful, None if alert not found
         """
         alert = self._pending_alerts.pop(alert_id, None)
         if not alert:
@@ -622,26 +663,39 @@ class TradingEngine:
                 f"Alert approved and order executed: {alert.stock_code}, "
                 f"order_id={order_result.order_id}"
             )
+            return {
+                "success": True,
+                "order_id": order_result.order_id or "",
+                "stock_code": alert.stock_code,
+                "stock_name": alert.stock_name,
+                "action": "매수" if alert.signal_type == SignalType.BUY else "매도",
+                "quantity": alert.suggested_quantity,
+                "price": alert.current_price,
+            }
         else:
             logger.warning(f"Alert approved but order failed: {order_result.message}")
+            raise Exception(order_result.message or "Order execution failed")
 
-        return order_result
-
-    def reject_alert(self, alert_id: str) -> bool:
+    def reject_alert(self, alert_id: str) -> dict[str, str | int] | None:
         """Reject a pending alert without executing.
 
         Args:
             alert_id: ID of the alert to reject
 
         Returns:
-            True if alert was found and rejected, False otherwise
+            Dict with alert info if found and rejected, None otherwise
         """
         alert = self._pending_alerts.pop(alert_id, None)
         if alert:
             logger.info(f"Alert rejected: {alert.stock_code}, alert_id={alert_id}")
-            return True
+            return {
+                "stock_code": alert.stock_code,
+                "stock_name": alert.stock_name,
+                "action": "매수" if alert.signal_type == SignalType.BUY else "매도",
+                "quantity": alert.suggested_quantity,
+            }
         logger.warning(f"Alert not found for rejection: {alert_id}")
-        return False
+        return None
 
     def set_daily_pnl(self, pnl_pct: float) -> None:
         """Set the daily P&L percentage for risk checks.
@@ -658,3 +712,96 @@ class TradingEngine:
     def clear_pending_alerts(self) -> None:
         """Clear all pending alerts."""
         self._pending_alerts.clear()
+
+    async def _send_telegram_alert(self, alert: AlertInfo) -> None:
+        """Send a Telegram notification for an alert.
+
+        Args:
+            alert: The alert to notify about
+        """
+        if not self._telegram_service or not self._telegram_service.is_enabled:
+            return
+
+        if not self._current_telegram_chat_id:
+            logger.debug("No Telegram chat ID for user, skipping notification")
+            return
+
+        try:
+            # Import here to avoid circular import
+            from app.services.telegram_service import AlertInfo as TelegramAlertInfo
+
+            # Convert AlertInfo to TelegramAlertInfo
+            telegram_alert = TelegramAlertInfo(
+                alert_id=alert.alert_id,
+                stock_code=alert.stock_code,
+                stock_name=alert.stock_name,
+                signal="BUY" if alert.signal_type == SignalType.BUY else "SELL",
+                confidence=alert.signal.confidence,
+                current_price=alert.current_price,
+                target_price=alert.signal.indicators.get("target_price"),
+                stop_loss_price=alert.signal.indicators.get("stop_loss_price"),
+                reasoning=alert.signal.reason.split(", ") if alert.signal.reason else [],
+                created_at=alert.created_at,
+            )
+
+            await self._telegram_service.send_alert(
+                chat_id=self._current_telegram_chat_id,
+                alert=telegram_alert,
+            )
+            logger.info(
+                f"Telegram alert sent for {alert.stock_code}, "
+                f"alert_id={alert.alert_id}"
+            )
+        except Exception as e:
+            logger.error(f"Failed to send Telegram alert: {e}")
+
+
+# Singleton instance
+_trading_engine: TradingEngine | None = None
+
+
+def get_trading_engine() -> TradingEngine:
+    """Get the singleton TradingEngine instance.
+
+    Returns:
+        The TradingEngine instance
+
+    Raises:
+        RuntimeError: If the trading engine has not been initialized
+    """
+    global _trading_engine
+    if _trading_engine is None:
+        raise RuntimeError(
+            "Trading engine not initialized. Call init_trading_engine first."
+        )
+    return _trading_engine
+
+
+def init_trading_engine(
+    mode: TradingMode,
+    kis_client: KISApiClient,
+    signal_generator: SignalGenerator,
+    risk_manager: RiskManager,
+    telegram_service: TelegramService | None = None,
+) -> TradingEngine:
+    """Initialize the singleton TradingEngine instance.
+
+    Args:
+        mode: Operating mode (AUTO or ALERT)
+        kis_client: KIS API client instance
+        signal_generator: Signal generator instance
+        risk_manager: Risk manager instance
+        telegram_service: Telegram service instance for alert notifications
+
+    Returns:
+        The initialized TradingEngine instance
+    """
+    global _trading_engine
+    _trading_engine = TradingEngine(
+        mode=mode,
+        kis_client=kis_client,
+        signal_generator=signal_generator,
+        risk_manager=risk_manager,
+        telegram_service=telegram_service,
+    )
+    return _trading_engine

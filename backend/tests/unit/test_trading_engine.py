@@ -1105,7 +1105,7 @@ class TestPendingAlerts:
 
         # Assert
         assert order_result is not None
-        assert order_result.success is True
+        assert order_result["success"] is True
         mock_kis_client.place_order.assert_called()
 
     @pytest.mark.asyncio
@@ -1334,7 +1334,7 @@ class TestEdgeCases:
         mock_signal_generator: MagicMock,
         mock_risk_manager: MagicMock,
     ):
-        """Rejecting non-existent alert should return False."""
+        """Rejecting non-existent alert should return None."""
         engine = TradingEngine(
             mode=TradingMode.ALERT,
             kis_client=mock_kis_client,
@@ -1343,7 +1343,7 @@ class TestEdgeCases:
         )
 
         result = engine.reject_alert("nonexistent-id")
-        assert result is False
+        assert result is None
 
     @pytest.mark.asyncio
     async def test_set_daily_pnl(
@@ -1401,7 +1401,9 @@ class TestEdgeCases:
         # Add an alert manually
         engine._pending_alerts["test-id"] = AlertInfo(
             alert_id="test-id",
+            user_id="test-user-id",
             stock_code="005930",
+            stock_name="삼성전자",
             signal=sample_buy_signal,
             signal_type=SignalType.BUY,
             current_price=70000,
@@ -1438,7 +1440,9 @@ class TestEdgeCases:
         # Add a sell alert manually
         engine._pending_alerts["sell-alert-id"] = AlertInfo(
             alert_id="sell-alert-id",
+            user_id="test-user-id",
             stock_code="005930",
+            stock_name="삼성전자",
             signal=sample_sell_signal,
             signal_type=SignalType.SELL,
             current_price=70000,
@@ -1449,7 +1453,7 @@ class TestEdgeCases:
         result = await engine.approve_alert("sell-alert-id")
 
         assert result is not None
-        assert result.success is True
+        assert result["success"] is True
         mock_kis_client.place_order.assert_called_with(
             stock_code="005930",
             side=OrderSide.SELL,

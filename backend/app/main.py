@@ -15,6 +15,7 @@ from app.api.invitations import router as invitations_router
 from app.api.positions import router as positions_router
 from app.api.signals import router as signals_router
 from app.api.stocks import router as stocks_router
+from app.api.telegram import router as telegram_router
 from app.api.trades import router as trades_router
 from app.api.trading import router as trading_router
 from app.api.users import router as users_router
@@ -83,3 +84,4 @@ app.include_router(trades_router, prefix="/api/v1")
 app.include_router(trading_router, prefix="/api/v1")
 app.include_router(watchlist_router, prefix="/api/v1")
 app.include_router(stocks_router, prefix="/api/v1")
+app.include_router(telegram_router, prefix="/api/v1")

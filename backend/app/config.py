@@ -58,6 +58,13 @@ class Settings(BaseSettings):
     kis_account_no: str = ""
     kis_is_mock: bool = True
 
+    # Telegram Bot settings
+    telegram_bot_token: str = ""
+    telegram_bot_username: str = ""
+    telegram_webhook_secret: str = ""
+    telegram_webhook_url: str = ""
+    telegram_enabled: bool = False
+
 
 @lru_cache
 def get_settings() -> Settings:
