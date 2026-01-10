@@ -67,6 +67,35 @@ class Position:
     profit_loss_rate: float
 
 
+@dataclass
+class OrderStatusResult:
+    """Order status inquiry result.
+
+    Fields:
+        order_id: Order number (ODNO)
+        stock_code: Stock code (PDNO)
+        stock_name: Stock name
+        order_side: BUY or SELL
+        order_quantity: Original order quantity
+        filled_quantity: Total filled quantity
+        filled_price: Average filled price
+        order_status: Current order status
+        order_time: Order time (HHMMSS)
+        filled_time: Last fill time (HHMMSS or None)
+    """
+
+    order_id: str
+    stock_code: str
+    stock_name: str
+    order_side: OrderSide
+    order_quantity: int
+    filled_quantity: int
+    filled_price: float
+    order_status: OrderStatus
+    order_time: str
+    filled_time: str | None
+
+
 class KISApiError(Exception):
     """Exception raised for KIS API errors."""
 
@@ -560,3 +589,84 @@ class KISApiClient:
             "purchase_amount": float(balance_data.get("pchs_amt_smtl_amt", 0)),
             "evaluation_amount": float(balance_data.get("evlu_amt_smtl_amt", 0)),
         }
+
+    async def get_order_status(self, order_id: str) -> OrderStatusResult | None:
+        self._ensure_authenticated()
+
+        tr_id = "VTTC8001R" if self._is_mock else "TTTC8001R"
+        url = f"{self._base_url}/uapi/domestic-stock/v1/trading/inquire-daily-ccld"
+        headers = self._get_headers(tr_id)
+
+        acnt_parts = self._account_no.split("-")
+        cano = acnt_parts[0] if len(acnt_parts) > 0 else ""
+        acnt_prdt_cd = acnt_parts[1] if len(acnt_parts) > 1 else "01"
+
+        params = {
+            "CANO": cano,
+            "ACNT_PRDT_CD": acnt_prdt_cd,
+            "INQR_STRT_DT": "",
+            "INQR_END_DT": "",
+            "SLL_BUY_DVSN_CD": "00",
+            "INQR_DVSN": "00",
+            "PDNO": "",
+            "CCLD_DVSN": "00",
+            "ORD_GNO_BRNO": "",
+            "ODNO": order_id,
+            "INQR_DVSN_3": "00",
+            "INQR_DVSN_1": "",
+            "CTX_AREA_FK100": "",
+            "CTX_AREA_NK100": "",
+        }
+
+        response = await self._request_with_retry("GET", url, headers=headers, params=params)
+        data = response.json()
+
+        if await self._check_and_refresh_token(data):
+            headers = self._get_headers(tr_id)
+            response = await self._request_with_retry("GET", url, headers=headers, params=params)
+            data = response.json()
+
+        if data.get("rt_cd") != "0":
+            raise KISApiError(data.get("msg1", "Unknown API error"))
+
+        output1 = data.get("output1", [])
+        if not output1:
+            return None
+
+        order_data = None
+        for item in output1:
+            if item.get("odno") == order_id:
+                order_data = item
+                break
+
+        if order_data is None:
+            return None
+
+        order_qty = int(order_data.get("ord_qty", 0))
+        filled_qty = int(order_data.get("tot_ccld_qty", 0))
+
+        if filled_qty == 0:
+            status = OrderStatus.PENDING
+        elif filled_qty >= order_qty:
+            status = OrderStatus.FILLED
+        else:
+            status = OrderStatus.PARTIALLY_FILLED
+
+        sll_buy_code = order_data.get("sll_buy_dvsn_cd", "02")
+        order_side = OrderSide.SELL if sll_buy_code == "01" else OrderSide.BUY
+
+        filled_time_raw = order_data.get("ccld_tmd", "")
+        filled_time = filled_time_raw if filled_time_raw else None
+
+        return OrderStatusResult(
+            order_id=order_data.get("odno", order_id),
+            stock_code=order_data.get("pdno", ""),
+            stock_name=order_data.get("prdt_name", ""),
+            order_side=order_side,
+            order_quantity=order_qty,
+            filled_quantity=filled_qty,
+            filled_price=float(order_data.get("avg_prvs", 0)),
+            order_status=status,
+            order_time=order_data.get("ord_tmd", ""),
+            filled_time=filled_time,
+        )

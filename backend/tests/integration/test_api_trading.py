@@ -9,9 +9,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
+from httpx import ASGITransport, AsyncClient
 
+from app.api.auth import get_current_user
+from app.database import get_db
 from app.main import app
-from app.services.kis_api import OrderResult, OrderStatus
+from app.models import User
+from app.services.kis_api import (
+    OrderResult,
+    OrderSide,
+    OrderStatus,
+    OrderStatusResult,
+)
 
 
 @pytest.fixture
@@ -211,3 +220,128 @@ class TestCanOpenPositionEndpoint:
         data = response.json()
         assert data["can_open"] is False
         assert "일일 손실 한도" in data["reason"]
+
+
+class TestOrderStatusEndpoint:
+
+    @pytest.fixture
+    def mock_user(self):
+        user = MagicMock(spec=User)
+        user.id = "user-123"
+        user.email = "test@example.com"
+        user.is_admin = False
+        return user
+
+    @pytest.fixture
+    def mock_db(self):
+        return AsyncMock()
+
+    def test_get_order_status_not_authenticated(self, client: TestClient) -> None:
+        response = client.get("/api/v1/trading/orders/0000123456/status")
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_get_order_status_no_api_key(self, mock_user, mock_db) -> None:
+        mock_db.execute = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db.execute.return_value = mock_result
+
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+        app.dependency_overrides[get_db] = lambda: mock_db
+
+        try:
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.get("/api/v1/trading/orders/0000123456/status")
+                assert response.status_code == 400
+                assert "not configured" in response.json()["detail"]
+        finally:
+            app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_get_order_status_success_filled(self, mock_user, mock_db) -> None:
+        mock_api_key_record = MagicMock()
+        mock_api_key_record.kis_app_key_encrypted = "encrypted_key"
+        mock_api_key_record.kis_app_secret_encrypted = "encrypted_secret"
+        mock_api_key_record.kis_account_no_encrypted = "encrypted_account"
+        mock_api_key_record.is_paper_trading = True
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_api_key_record
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        order_status_result = OrderStatusResult(
+            order_id="0000123456",
+            stock_code="005930",
+            stock_name="삼성전자",
+            order_side=OrderSide.BUY,
+            order_quantity=10,
+            filled_quantity=10,
+            filled_price=50000.0,
+            order_status=OrderStatus.FILLED,
+            order_time="093000",
+            filled_time="093015",
+        )
+
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+        app.dependency_overrides[get_db] = lambda: mock_db
+
+        try:
+            with patch("app.api.trading.decrypt", side_effect=lambda x: f"decrypted_{x}"):
+                with patch("app.api.trading.KISApiClient") as mock_kis:
+                    mock_client_instance = AsyncMock()
+                    mock_client_instance.authenticate.return_value = True
+                    mock_client_instance.get_order_status.return_value = order_status_result
+                    mock_client_instance.__aenter__.return_value = mock_client_instance
+                    mock_client_instance.__aexit__.return_value = None
+                    mock_kis.return_value = mock_client_instance
+
+                    async with AsyncClient(
+                        transport=ASGITransport(app=app), base_url="http://test"
+                    ) as ac:
+                        response = await ac.get("/api/v1/trading/orders/0000123456/status")
+                        assert response.status_code == 200
+                        data = response.json()
+                        assert data["order_id"] == "0000123456"
+                        assert data["stock_code"] == "005930"
+                        assert data["side"] == "BUY"
+                        assert data["status"] == "FILLED"
+                        assert data["filled_quantity"] == 10
+        finally:
+            app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_get_order_status_not_found(self, mock_user, mock_db) -> None:
+        mock_api_key_record = MagicMock()
+        mock_api_key_record.kis_app_key_encrypted = "encrypted_key"
+        mock_api_key_record.kis_app_secret_encrypted = "encrypted_secret"
+        mock_api_key_record.kis_account_no_encrypted = "encrypted_account"
+        mock_api_key_record.is_paper_trading = True
+
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_api_key_record
+        mock_db.execute = AsyncMock(return_value=mock_result)
+
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+        app.dependency_overrides[get_db] = lambda: mock_db
+
+        try:
+            with patch("app.api.trading.decrypt", side_effect=lambda x: f"decrypted_{x}"):
+                with patch("app.api.trading.KISApiClient") as mock_kis:
+                    mock_client_instance = AsyncMock()
+                    mock_client_instance.authenticate.return_value = True
+                    mock_client_instance.get_order_status.return_value = None
+                    mock_client_instance.__aenter__.return_value = mock_client_instance
+                    mock_client_instance.__aexit__.return_value = None
+                    mock_kis.return_value = mock_client_instance
+
+                    async with AsyncClient(
+                        transport=ASGITransport(app=app), base_url="http://test"
+                    ) as ac:
+                        response = await ac.get("/api/v1/trading/orders/NONEXISTENT/status")
+                        assert response.status_code == 200
+                        assert response.json() is None
+        finally:
+            app.dependency_overrides.clear()

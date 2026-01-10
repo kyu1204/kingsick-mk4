@@ -14,6 +14,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user
@@ -24,7 +25,9 @@ from app.api.schemas import (
     CanOpenPositionRequest,
     CanOpenPositionResponse,
     OrderResponse,
+    OrderSideEnum,
     OrderStatusEnum,
+    OrderStatusQueryResponse,
     PositionSizeRequest,
     PositionSizeResponse,
     RejectAlertRequest,
@@ -39,7 +42,9 @@ from app.api.schemas import (
     TradingStatusResponse,
 )
 from app.database import get_db
-from app.models import User
+from app.models import User, UserApiKey
+from app.services.encryption import decrypt
+from app.services.kis_api import KISApiClient, KISApiError, OrderSide, OrderStatus
 from app.services.risk_manager import RiskAction, RiskManager
 from app.services.watchlist import WatchlistService
 
@@ -388,3 +393,70 @@ async def get_trading_settings_for_stock(
     if not settings:
         return None
     return TradingSettingsResponse(**settings)
+
+
+def _order_side_to_enum(side: OrderSide) -> OrderSideEnum:
+    return OrderSideEnum.BUY if side == OrderSide.BUY else OrderSideEnum.SELL
+
+
+def _order_status_to_enum(status: OrderStatus) -> OrderStatusEnum:
+    mapping = {
+        OrderStatus.PENDING: OrderStatusEnum.PENDING,
+        OrderStatus.FILLED: OrderStatusEnum.FILLED,
+        OrderStatus.PARTIALLY_FILLED: OrderStatusEnum.PARTIAL,
+        OrderStatus.FAILED: OrderStatusEnum.FAILED,
+        OrderStatus.CANCELLED: OrderStatusEnum.CANCELLED,
+    }
+    return mapping.get(status, OrderStatusEnum.PENDING)
+
+
+@router.get("/orders/{order_id}/status", response_model=OrderStatusQueryResponse | None)
+async def get_order_status(
+    order_id: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> OrderStatusQueryResponse | None:
+    result = await db.execute(
+        select(UserApiKey).where(UserApiKey.user_id == current_user.id)
+    )
+    api_key_record = result.scalar_one_or_none()
+
+    if not api_key_record:
+        raise HTTPException(status_code=400, detail="KIS API key not configured")
+
+    try:
+        app_key = decrypt(api_key_record.kis_app_key_encrypted)
+        app_secret = decrypt(api_key_record.kis_app_secret_encrypted)
+        account_no = decrypt(api_key_record.kis_account_no_encrypted)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Failed to decrypt API key") from e
+
+    async with KISApiClient(
+        app_key=app_key,
+        app_secret=app_secret,
+        account_no=account_no,
+        is_mock=api_key_record.is_paper_trading,
+    ) as client:
+        try:
+            authenticated = await client.authenticate()
+            if not authenticated:
+                raise HTTPException(status_code=401, detail="KIS API authentication failed")
+
+            order_result = await client.get_order_status(order_id)
+            if order_result is None:
+                return None
+
+            return OrderStatusQueryResponse(
+                order_id=order_result.order_id,
+                stock_code=order_result.stock_code,
+                stock_name=order_result.stock_name,
+                side=_order_side_to_enum(order_result.order_side),
+                order_quantity=order_result.order_quantity,
+                filled_quantity=order_result.filled_quantity,
+                filled_price=order_result.filled_price,
+                status=_order_status_to_enum(order_result.order_status),
+                order_time=order_result.order_time,
+                filled_time=order_result.filled_time,
+            )
+        except KISApiError as e:
+            raise HTTPException(status_code=502, detail=str(e)) from e

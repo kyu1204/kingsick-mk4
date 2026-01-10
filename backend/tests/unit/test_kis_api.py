@@ -16,6 +16,7 @@ from app.services.kis_api import (
     OrderResult,
     OrderSide,
     OrderStatus,
+    OrderStatusResult,
     Position,
     StockPrice,
 )
@@ -748,3 +749,184 @@ class TestDataClasses:
         assert OrderStatus.PARTIALLY_FILLED.value == "partially_filled"
         assert OrderStatus.FAILED.value == "failed"
         assert OrderStatus.CANCELLED.value == "cancelled"
+
+    def test_order_status_result_dataclass(self):
+        result = OrderStatusResult(
+            order_id="0000123456",
+            stock_code="005930",
+            stock_name="삼성전자",
+            order_side=OrderSide.BUY,
+            order_quantity=10,
+            filled_quantity=10,
+            filled_price=50000.0,
+            order_status=OrderStatus.FILLED,
+            order_time="093000",
+            filled_time="093015",
+        )
+
+        assert result.order_id == "0000123456"
+        assert result.stock_code == "005930"
+        assert result.stock_name == "삼성전자"
+        assert result.order_side == OrderSide.BUY
+        assert result.order_quantity == 10
+        assert result.filled_quantity == 10
+        assert result.filled_price == 50000.0
+        assert result.order_status == OrderStatus.FILLED
+        assert result.order_time == "093000"
+        assert result.filled_time == "093015"
+
+
+class TestGetOrderStatus:
+
+    @pytest.fixture
+    def authenticated_client(self):
+        client = KISApiClient(
+            app_key="test_key",
+            app_secret="test_secret",
+            account_no="12345678-01",
+        )
+        client._access_token = "test_access_token"
+        return client
+
+    async def test_get_order_status_filled(self, authenticated_client):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "rt_cd": "0",
+            "output1": [
+                {
+                    "odno": "0000123456",
+                    "pdno": "005930",
+                    "prdt_name": "삼성전자",
+                    "sll_buy_dvsn_cd": "02",  # 02=BUY, 01=SELL
+                    "ord_qty": "10",
+                    "tot_ccld_qty": "10",
+                    "avg_prvs": "50000",
+                    "ord_tmd": "093000",
+                    "ccld_tmd": "093015",
+                },
+            ],
+        }
+
+        with patch.object(authenticated_client, "_http_client") as mock_http:
+            mock_http.get = AsyncMock(return_value=mock_response)
+
+            result = await authenticated_client.get_order_status("0000123456")
+
+            assert result is not None
+            assert result.order_id == "0000123456"
+            assert result.stock_code == "005930"
+            assert result.stock_name == "삼성전자"
+            assert result.order_side == OrderSide.BUY
+            assert result.order_quantity == 10
+            assert result.filled_quantity == 10
+            assert result.filled_price == 50000.0
+            assert result.order_status == OrderStatus.FILLED
+            assert result.order_time == "093000"
+            assert result.filled_time == "093015"
+
+    async def test_get_order_status_pending(self, authenticated_client):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "rt_cd": "0",
+            "output1": [
+                {
+                    "odno": "0000123457",
+                    "pdno": "000660",
+                    "prdt_name": "SK하이닉스",
+                    "sll_buy_dvsn_cd": "01",  # 01=SELL
+                    "ord_qty": "20",
+                    "tot_ccld_qty": "0",
+                    "avg_prvs": "0",
+                    "ord_tmd": "100000",
+                    "ccld_tmd": "",
+                },
+            ],
+        }
+
+        with patch.object(authenticated_client, "_http_client") as mock_http:
+            mock_http.get = AsyncMock(return_value=mock_response)
+
+            result = await authenticated_client.get_order_status("0000123457")
+
+            assert result is not None
+            assert result.order_id == "0000123457"
+            assert result.order_side == OrderSide.SELL
+            assert result.order_quantity == 20
+            assert result.filled_quantity == 0
+            assert result.order_status == OrderStatus.PENDING
+            assert result.filled_time is None
+
+    async def test_get_order_status_partially_filled(self, authenticated_client):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "rt_cd": "0",
+            "output1": [
+                {
+                    "odno": "0000123458",
+                    "pdno": "005930",
+                    "prdt_name": "삼성전자",
+                    "sll_buy_dvsn_cd": "02",
+                    "ord_qty": "100",
+                    "tot_ccld_qty": "50",
+                    "avg_prvs": "51000",
+                    "ord_tmd": "110000",
+                    "ccld_tmd": "110530",
+                },
+            ],
+        }
+
+        with patch.object(authenticated_client, "_http_client") as mock_http:
+            mock_http.get = AsyncMock(return_value=mock_response)
+
+            result = await authenticated_client.get_order_status("0000123458")
+
+            assert result is not None
+            assert result.order_quantity == 100
+            assert result.filled_quantity == 50
+            assert result.order_status == OrderStatus.PARTIALLY_FILLED
+
+    async def test_get_order_status_not_found(self, authenticated_client):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "rt_cd": "0",
+            "output1": [],
+        }
+
+        with patch.object(authenticated_client, "_http_client") as mock_http:
+            mock_http.get = AsyncMock(return_value=mock_response)
+
+            result = await authenticated_client.get_order_status("NONEXISTENT")
+
+            assert result is None
+
+    async def test_get_order_status_api_error(self, authenticated_client):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "rt_cd": "1",
+            "msg1": "조회 실패",
+        }
+
+        with patch.object(authenticated_client, "_http_client") as mock_http:
+            mock_http.get = AsyncMock(return_value=mock_response)
+
+            with pytest.raises(KISApiError) as exc_info:
+                await authenticated_client.get_order_status("0000123456")
+
+            assert "조회 실패" in str(exc_info.value)
+
+    async def test_get_order_status_without_auth(self):
+        client = KISApiClient(
+            app_key="test_key",
+            app_secret="test_secret",
+            account_no="12345678-01",
+        )
+
+        with pytest.raises(KISApiError) as exc_info:
+            await client.get_order_status("0000123456")
+
+        assert "Not authenticated" in str(exc_info.value)

@@ -216,7 +216,7 @@
 |---|------|----------|------|
 | 3-5-7 | Alert Expiry | ✅ 완료 | 5분 타임아웃 구현 |
 | 3-5-8 | 영구 저장소 | ✅ 완료 | AlertStore - Redis + in-memory fallback |
-| 3-5-9 | 주문 체결 확인 | P3 | 체결 여부 조회 API 연동 |
+| 3-5-9 | 주문 체결 확인 | ✅ 완료 | get_order_status() API 구현 |
 | 3-5-10 | 동시성 처리 | ✅ 완료 | pop_atomic() 분산 락 구현 |
 
 ### Task 3-2: AI 자동 스캔 ✅

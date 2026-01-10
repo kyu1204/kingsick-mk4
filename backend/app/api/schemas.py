@@ -380,3 +380,16 @@ class ErrorResponse(BaseModel):
     """Response schema for errors."""
 
     detail: str = Field(..., description="Error message")
+
+
+class OrderStatusQueryResponse(BaseModel):
+    order_id: str = Field(..., description="Order ID")
+    stock_code: str = Field(..., description="Stock code")
+    stock_name: str = Field(..., description="Stock name")
+    side: OrderSideEnum = Field(..., description="Order side (BUY/SELL)")
+    order_quantity: int = Field(..., description="Original order quantity")
+    filled_quantity: int = Field(..., description="Filled quantity")
+    filled_price: float = Field(..., description="Average filled price")
+    status: OrderStatusEnum = Field(..., description="Order status")
+    order_time: str = Field(..., description="Order time (HHMMSS)")
+    filled_time: str | None = Field(None, description="Last fill time (HHMMSS or null)")
