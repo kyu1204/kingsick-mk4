@@ -6,30 +6,30 @@ that implements AUTO and ALERT trading modes for BNF-style swing trading.
 Target coverage: 90%+
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
-from dataclasses import dataclass
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 
-from app.services.trading_engine import (
-    TradingMode,
-    TradingLoopResult,
-    AlertInfo,
-    TradingEngine,
-)
 from app.services.kis_api import (
     KISApiClient,
     OrderResult,
-    OrderStatus,
     OrderSide,
+    OrderStatus,
     Position,
     StockPrice,
 )
-from app.services.signal_generator import SignalGenerator, SignalType, TradingSignal
 from app.services.risk_manager import (
-    RiskManager,
-    RiskCheckResult,
     RiskAction,
+    RiskCheckResult,
+    RiskManager,
     TrailingStop,
+)
+from app.services.signal_generator import SignalGenerator, SignalType, TradingSignal
+from app.services.trading_engine import (
+    AlertInfo,
+    TradingEngine,
+    TradingLoopResult,
+    TradingMode,
 )
 
 
@@ -1668,6 +1668,7 @@ class TestAlertExpiry:
     ):
         """Approve alert after 5 minutes should raise AlertExpiredError."""
         from datetime import UTC, datetime, timedelta
+
         from app.services.trading_engine import AlertExpiredError
 
         engine = TradingEngine(

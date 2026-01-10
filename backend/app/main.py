@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.api_keys import router as api_keys_router
 from app.api.auth import router as auth_router
+from app.api.backtest import router as backtest_router
 from app.api.indicators import router as indicators_router
 from app.api.invitations import router as invitations_router
 from app.api.positions import router as positions_router
@@ -89,3 +90,4 @@ app.include_router(watchlist_router, prefix="/api/v1")
 app.include_router(stocks_router, prefix="/api/v1")
 app.include_router(telegram_router, prefix="/api/v1")
 app.include_router(slack_router, prefix="/api/v1")
+app.include_router(backtest_router, prefix="/api/v1")

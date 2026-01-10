@@ -3,8 +3,8 @@ Integration tests for authentication API endpoints.
 """
 
 import uuid
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import UTC, datetime, timedelta
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -53,7 +53,7 @@ def mock_invitation(mock_admin_user):
     invitation.created_by = mock_admin_user.id
     invitation.used_by = None
     invitation.used_at = None
-    invitation.expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    invitation.expires_at = datetime.now(UTC) + timedelta(days=7)
     invitation.is_valid = True
     return invitation
 

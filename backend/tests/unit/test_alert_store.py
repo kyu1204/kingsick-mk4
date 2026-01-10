@@ -1,10 +1,10 @@
 import json
-from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock
 
 import pytest
 
-from app.services.alert_store import AlertStore, AlertData
+from app.services.alert_store import AlertData, AlertStore
 
 
 class TestAlertData:

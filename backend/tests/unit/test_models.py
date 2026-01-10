@@ -3,9 +3,7 @@ Unit tests for SQLAlchemy models.
 """
 
 import uuid
-from datetime import datetime, timedelta, timezone
-
-import pytest
+from datetime import UTC, datetime, timedelta
 
 from app.models import Invitation, User, UserApiKey
 
@@ -47,7 +45,7 @@ class TestInvitationModel:
     def test_invitation_creation(self):
         """Invitation model should have correct attributes."""
         user_id = uuid.uuid4()
-        expires = datetime.now(timezone.utc) + timedelta(days=7)
+        expires = datetime.now(UTC) + timedelta(days=7)
 
         invitation = Invitation(
             code="test-invitation-code",
@@ -61,7 +59,7 @@ class TestInvitationModel:
 
     def test_invitation_is_valid_not_used(self):
         """Unused invitation before expiry should be valid."""
-        expires = datetime.now(timezone.utc) + timedelta(days=7)
+        expires = datetime.now(UTC) + timedelta(days=7)
         invitation = Invitation(
             code="valid-code",
             created_by=uuid.uuid4(),
@@ -71,19 +69,19 @@ class TestInvitationModel:
 
     def test_invitation_is_invalid_when_used(self):
         """Used invitation should be invalid."""
-        expires = datetime.now(timezone.utc) + timedelta(days=7)
+        expires = datetime.now(UTC) + timedelta(days=7)
         invitation = Invitation(
             code="used-code",
             created_by=uuid.uuid4(),
             expires_at=expires,
-            used_at=datetime.now(timezone.utc),
+            used_at=datetime.now(UTC),
             used_by=uuid.uuid4(),
         )
         assert invitation.is_valid is False
 
     def test_invitation_is_invalid_when_expired(self):
         """Expired invitation should be invalid."""
-        expires = datetime.now(timezone.utc) - timedelta(days=1)
+        expires = datetime.now(UTC) - timedelta(days=1)
         invitation = Invitation(
             code="expired-code",
             created_by=uuid.uuid4(),
@@ -96,7 +94,7 @@ class TestInvitationModel:
         invitation = Invitation(
             code="long-invitation-code-12345",
             created_by=uuid.uuid4(),
-            expires_at=datetime.now(timezone.utc),
+            expires_at=datetime.now(UTC),
         )
         assert "long-inv" in repr(invitation)
 

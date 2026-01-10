@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

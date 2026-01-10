@@ -4,7 +4,6 @@ Integration tests for indicators API router.
 Tests technical indicator calculation endpoints.
 """
 
-import math
 from collections.abc import Generator
 
 import pytest

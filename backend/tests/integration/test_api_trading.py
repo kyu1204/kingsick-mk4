@@ -16,7 +16,6 @@ from app.database import get_db
 from app.main import app
 from app.models import User
 from app.services.kis_api import (
-    OrderResult,
     OrderSide,
     OrderStatus,
     OrderStatusResult,

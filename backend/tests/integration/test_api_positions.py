@@ -6,7 +6,7 @@ Note: These tests use mock data since they require KIS API authentication.
 """
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
