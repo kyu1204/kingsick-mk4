@@ -103,9 +103,9 @@ function buildStats(data: DashboardData): StatItem[] {
 
   return [
     {
-      title: 'Total Portfolio Value',
+      title: '총 포트폴리오 가치',
       value: data.balance ? formatNumber(data.balance.net_worth) : '-',
-      unit: 'KRW',
+      unit: '원',
       change: data.balance
         ? `${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%`
         : '-',
@@ -113,9 +113,9 @@ function buildStats(data: DashboardData): StatItem[] {
       icon: DollarSign,
     },
     {
-      title: "Today's P&L",
+      title: "오늘의 손익",
       value: `${totalPnL >= 0 ? '+' : ''}${formatNumber(totalPnL)}`,
-      unit: 'KRW',
+      unit: '원',
       change: data.positions.length > 0
         ? `${totalPnL >= 0 ? '+' : ''}${(totalPnL / (data.balance?.purchase_amount || 1) * 100).toFixed(2)}%`
         : '-',
@@ -123,18 +123,18 @@ function buildStats(data: DashboardData): StatItem[] {
       icon: totalPnL >= 0 ? TrendingUp : TrendingDown,
     },
     {
-      title: 'Active Positions',
+      title: '보유 종목',
       value: data.positions.length.toString(),
-      unit: 'stocks',
-      change: `${data.tradingStatus?.trailing_stops_count || 0} with trailing stop`,
+      unit: '종목',
+      change: `${data.tradingStatus?.trailing_stops_count || 0}개 추적손절 설정`,
       changeType: 'neutral',
       icon: Activity,
     },
     {
-      title: 'Pending Alerts',
+      title: '대기 중 알림',
       value: data.tradingStatus?.pending_alerts_count.toString() || '0',
       unit: '',
-      change: `${data.alerts.length} awaiting action`,
+      change: `${data.alerts.length}건 대기 중`,
       changeType: data.alerts.length > 0 ? 'profit' : 'neutral',
       icon: AlertCircle,
     },
@@ -236,15 +236,15 @@ export default function DashboardPage() {
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <h1 className="text-3xl font-bold tracking-tight">대시보드</h1>
             <p className="text-muted-foreground">
-              Overview of your trading portfolio and recent activity
+              포트폴리오 현황 및 최근 활동 개요
             </p>
           </div>
           <Badge
             variant={data.tradingStatus?.mode === TradingMode.AUTO ? 'profit' : 'secondary'}
           >
-            {data.tradingStatus?.mode === TradingMode.AUTO ? 'AUTO Mode Active' : 'ALERT Mode'}
+            {data.tradingStatus?.mode === TradingMode.AUTO ? '자동 매매 활성화' : '알림 모드'}
           </Badge>
         </div>
 
@@ -295,7 +295,7 @@ export default function DashboardPage() {
                       : 'text-muted-foreground'
                   }`}
                 >
-                  {stat.change} from yesterday
+                  {stat.change} (전일 대비)
                 </p>
               </CardContent>
             </Card>
@@ -307,9 +307,9 @@ export default function DashboardPage() {
           {/* Portfolio Performance Chart */}
           <Card className="col-span-4">
             <CardHeader>
-              <CardTitle>Portfolio Performance</CardTitle>
+              <CardTitle>포트폴리오 성과</CardTitle>
               <CardDescription>
-                Your portfolio value over the last 30 days
+                최근 30일간 포트폴리오 가치 추이
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -324,9 +324,9 @@ export default function DashboardPage() {
           {/* Positions & Alerts */}
           <Card className="col-span-3">
             <CardHeader>
-              <CardTitle>Current Positions</CardTitle>
+              <CardTitle>현재 포지션</CardTitle>
               <CardDescription>
-                Your active stock positions and pending alerts
+                보유 종목 및 대기 중인 알림
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -334,7 +334,7 @@ export default function DashboardPage() {
                 {/* Pending Alerts */}
                 {data.alerts.length > 0 && (
                   <div className="mb-4">
-                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">Pending Alerts</h4>
+                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">대기 중 알림</h4>
                     {data.alerts.slice(0, 2).map((alert) => (
                       <div key={alert.alert_id} className="flex items-center justify-between py-2 border-b border-muted">
                         <div className="flex items-center gap-3">
@@ -352,9 +352,9 @@ export default function DashboardPage() {
                           <Badge variant={alert.signal_type === 'BUY' ? 'profit' : 'loss'}>
                             {alert.signal_type}
                           </Badge>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {formatNumber(alert.current_price)} KRW
-                          </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {formatNumber(alert.current_price)}원
+                        </p>
                         </div>
                       </div>
                     ))}
@@ -379,7 +379,7 @@ export default function DashboardPage() {
                         )}
                         <div>
                           <p className="text-sm font-medium">{position.stock_name}</p>
-                          <p className="text-xs text-muted-foreground">{position.quantity} shares</p>
+                          <p className="text-xs text-muted-foreground">{position.quantity}주</p>
                         </div>
                       </div>
                       <div className="text-right">
@@ -387,7 +387,7 @@ export default function DashboardPage() {
                           {position.profit_loss >= 0 ? '+' : ''}{position.profit_loss_rate.toFixed(2)}%
                         </Badge>
                         <p className="text-sm text-muted-foreground mt-1">
-                          {formatNumber(position.current_price)} KRW
+                          {formatNumber(position.current_price)}원
                         </p>
                       </div>
                     </div>
@@ -395,7 +395,7 @@ export default function DashboardPage() {
                 ) : (
                   <div className="flex items-center justify-center h-20 text-muted-foreground">
                     <Activity className="h-4 w-4 mr-2" />
-                    <p>No active positions</p>
+                    <p>보유 종목 없음</p>
                   </div>
                 )}
               </div>
@@ -408,7 +408,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                Stock Price Chart
+                주가 차트
                 {data.selectedStock && (
                   <span className="text-muted-foreground font-normal ml-2">
                     ({data.positions.find((p) => p.stock_code === data.selectedStock)?.stock_name || data.selectedStock})
@@ -416,7 +416,7 @@ export default function DashboardPage() {
                 )}
               </CardTitle>
               <CardDescription>
-                Click on a position above to view its price chart
+                위에서 종목을 클릭하면 차트를 볼 수 있습니다
               </CardDescription>
             </CardHeader>
             <CardContent>

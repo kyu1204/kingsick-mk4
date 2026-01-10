@@ -60,14 +60,14 @@ export default function HistoryPage() {
           {/* Page Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Trade History</h1>
+              <h1 className="text-3xl font-bold tracking-tight">거래 내역</h1>
               <p className="text-muted-foreground">
-                View and export your past trading activity
+                과거 거래 활동을 조회하고 내보내기
               </p>
             </div>
             <Button variant="outline">
               <Download className="h-4 w-4 mr-2" />
-              Export CSV
+              CSV 내보내기
             </Button>
           </div>
 
@@ -81,22 +81,22 @@ export default function HistoryPage() {
           {/* Trade History Table */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Trades</CardTitle>
+              <CardTitle>최근 거래</CardTitle>
               <CardDescription>
-                Your executed trades with AI signal reasons
+                AI 신호 분석에 기반한 체결 거래 내역
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {/* Table Header */}
                 <div className="grid grid-cols-9 gap-4 text-sm font-medium text-muted-foreground border-b pb-2">
-                  <div className="col-span-2">Date</div>
-                  <div>Symbol</div>
-                  <div>Name</div>
-                  <div className="text-center">Type</div>
-                  <div className="text-right">Qty</div>
-                  <div className="text-right">Price</div>
-                  <div className="text-right">Total</div>
+                  <div className="col-span-2">일자</div>
+                  <div>종목코드</div>
+                  <div>종목명</div>
+                  <div className="text-center">구분</div>
+                  <div className="text-right">수량</div>
+                  <div className="text-right">가격</div>
+                  <div className="text-right">금액</div>
                   <div className="text-center">AI</div>
                 </div>
 
@@ -145,7 +145,7 @@ export default function HistoryPage() {
               {totalCount > 0 && (
                 <div className="flex items-center justify-between mt-6">
                   <p className="text-sm text-muted-foreground">
-                    Showing {startIdx}-{endIdx} of {totalCount} trades
+                    전체 {totalCount}건 중 {startIdx}-{endIdx} 표시
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -154,7 +154,7 @@ export default function HistoryPage() {
                       disabled={page <= 1}
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                     >
-                      Previous
+                      이전
                     </Button>
                     <Button
                       variant="outline"
@@ -162,7 +162,7 @@ export default function HistoryPage() {
                       disabled={page >= totalPages}
                       onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     >
-                      Next
+                      다음
                     </Button>
                   </div>
                 </div>

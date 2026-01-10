@@ -45,14 +45,14 @@ export function Header() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
             </span>
-            <span className="text-muted-foreground">Market Open</span>
+            <span className="text-muted-foreground">장 운영중</span>
           </div>
 
           {/* Notifications */}
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
             <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
-            <span className="sr-only">Notifications</span>
+            <span className="sr-only">알림</span>
           </Button>
 
           {/* Theme toggle */}
@@ -63,7 +63,7 @@ export function Header() {
           >
             <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            <span className="sr-only">Toggle theme</span>
+            <span className="sr-only">테마 전환</span>
           </Button>
 
           {/* User menu */}
@@ -71,7 +71,7 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
                 <User className="h-5 w-5" />
-                <span className="sr-only">User menu</span>
+                <span className="sr-only">사용자 메뉴</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -82,7 +82,7 @@ export function Header() {
                   </p>
                   {user?.is_admin && (
                     <p className="text-xs leading-none text-muted-foreground">
-                      Administrator
+                      관리자
                     </p>
                   )}
                 </div>
@@ -91,14 +91,14 @@ export function Header() {
               <DropdownMenuItem asChild>
                 <Link href="/settings" className="cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
-                  Settings
+                  설정
                 </Link>
               </DropdownMenuItem>
               {user?.is_admin && (
                 <DropdownMenuItem asChild>
                   <Link href="/admin" className="cursor-pointer">
                     <Shield className="mr-2 h-4 w-4" />
-                    Admin
+                    관리자
                   </Link>
                 </DropdownMenuItem>
               )}
@@ -108,7 +108,7 @@ export function Header() {
                 className="cursor-pointer text-destructive focus:text-destructive"
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                Logout
+                로그아웃
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

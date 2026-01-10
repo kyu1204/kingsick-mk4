@@ -163,10 +163,10 @@ export function ApiKeySettings() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Key className="h-5 w-5" />
-          Korea Investment API
+          한국투자증권 API
         </CardTitle>
         <CardDescription>
-          Connect your brokerage account for live trading
+          실거래를 위해 증권사 계정을 연결하세요
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -202,17 +202,17 @@ export function ApiKeySettings() {
             {/* Connected state */}
             <div className="flex items-center justify-between p-4 border rounded-lg bg-green-500/10 border-green-500/20">
               <div>
-                <p className="font-medium text-green-500">Connected</p>
+                <p className="font-medium text-green-500">연결됨</p>
                 <p className="text-sm text-muted-foreground">
                   App Key: {apiKeyInfo.app_key_masked}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Account: {apiKeyInfo.account_no_masked}
+                  계좌: {apiKeyInfo.account_no_masked}
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1">
                 <Badge variant={apiKeyInfo.is_paper_trading ? 'secondary' : 'profit'}>
-                  {apiKeyInfo.is_paper_trading ? 'Paper Trading' : 'Live'}
+                  {apiKeyInfo.is_paper_trading ? '모의투자' : '실거래'}
                 </Badge>
               </div>
             </div>
@@ -224,7 +224,7 @@ export function ApiKeySettings() {
                 className="flex-1"
                 onClick={() => setShowForm(true)}
               >
-                Update API Key
+                API 키 수정
               </Button>
               <Button
                 variant="outline"
@@ -245,10 +245,10 @@ export function ApiKeySettings() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Delete API Key</DialogTitle>
+                    <DialogTitle>API 키 삭제</DialogTitle>
                     <DialogDescription>
-                      Are you sure you want to delete your API credentials? This action cannot be undone.
-                      You will need to re-enter your credentials to continue trading.
+                      API 자격증명을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.
+                      거래를 계속하려면 자격증명을 다시 입력해야 합니다.
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
@@ -257,7 +257,7 @@ export function ApiKeySettings() {
                       onClick={() => setShowDeleteDialog(false)}
                       disabled={isDeleting}
                     >
-                      Cancel
+                      취소
                     </Button>
                     <Button
                       variant="destructive"
@@ -267,10 +267,10 @@ export function ApiKeySettings() {
                       {isDeleting ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Deleting...
+                          삭제 중...
                         </>
                       ) : (
-                        'Delete'
+                        '삭제'
                       )}
                     </Button>
                   </DialogFooter>
@@ -286,20 +286,20 @@ export function ApiKeySettings() {
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    Connect your Korea Investment API to enable live trading.
-                    You can get your API credentials from the KIS developer portal.
+                    실거래를 활성화하려면 한국투자증권 API를 연결하세요.
+                    KIS 개발자 포털에서 API 자격증명을 발급받을 수 있습니다.
                   </AlertDescription>
                 </Alert>
               )}
 
               <div className="space-y-2">
                 <label htmlFor="appKey" className="text-sm font-medium">
-                  App Key
+                  앱 키
                 </label>
                 <Input
                   id="appKey"
                   type="text"
-                  placeholder="Enter your App Key"
+                  placeholder="앱 키를 입력하세요"
                   value={appKey}
                   onChange={(e) => setAppKey(e.target.value)}
                   required
@@ -309,13 +309,13 @@ export function ApiKeySettings() {
 
               <div className="space-y-2">
                 <label htmlFor="appSecret" className="text-sm font-medium">
-                  App Secret
+                  앱 시크릿
                 </label>
                 <div className="relative">
                   <Input
                     id="appSecret"
                     type={showSecret ? 'text' : 'password'}
-                    placeholder="Enter your App Secret"
+                    placeholder="앱 시크릿을 입력하세요"
                     value={appSecret}
                     onChange={(e) => setAppSecret(e.target.value)}
                     required
@@ -339,12 +339,12 @@ export function ApiKeySettings() {
 
               <div className="space-y-2">
                 <label htmlFor="accountNo" className="text-sm font-medium">
-                  Account Number
+                  계좌번호
                 </label>
                 <Input
                   id="accountNo"
                   type="text"
-                  placeholder="Enter your account number"
+                  placeholder="계좌번호를 입력하세요"
                   value={accountNo}
                   onChange={(e) => setAccountNo(e.target.value)}
                   required
@@ -354,9 +354,9 @@ export function ApiKeySettings() {
 
               <div className="flex items-center justify-between p-4 border rounded-lg">
                 <div>
-                  <p className="font-medium">Paper Trading Mode</p>
+                  <p className="font-medium">모의투자 모드</p>
                   <p className="text-sm text-muted-foreground">
-                    Test with virtual trades (recommended for testing)
+                    가상 거래로 테스트 (테스트 시 권장)
                   </p>
                 </div>
                 <Switch
@@ -370,8 +370,8 @@ export function ApiKeySettings() {
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    Live trading mode will execute real trades with real money.
-                    Make sure you understand the risks involved.
+                    실거래 모드는 실제 자금으로 거래가 체결됩니다.
+                    관련 위험을 충분히 이해하고 사용하세요.
                   </AlertDescription>
                 </Alert>
               )}
@@ -390,17 +390,17 @@ export function ApiKeySettings() {
                     }}
                     disabled={isSaving}
                   >
-                    Cancel
+                    취소
                   </Button>
                 )}
                 <Button type="submit" className="flex-1" disabled={isSaving}>
                   {isSaving ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
+                      저장 중...
                     </>
                   ) : (
-                    'Save API Key'
+                    'API 키 저장'
                   )}
                 </Button>
               </div>

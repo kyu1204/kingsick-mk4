@@ -58,9 +58,9 @@ export default function AnalysisPage() {
       <MainLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Analysis</h1>
+            <h1 className="text-3xl font-bold tracking-tight">분석</h1>
             <p className="text-muted-foreground">
-              Technical analysis with AI-powered signal generation
+              AI 기반 신호 생성을 활용한 기술적 분석
             </p>
           </div>
 
@@ -70,22 +70,22 @@ export default function AnalysisPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Stock Analysis</CardTitle>
+              <CardTitle>종목 분석</CardTitle>
               <CardDescription>
-                Search for a stock to view detailed technical analysis
+                종목 코드를 검색하여 상세 기술적 분석을 확인하세요
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSearch} className="flex gap-2">
                 <Input
-                  placeholder="Enter stock code (e.g., 005930)"
+                  placeholder="종목 코드 입력 (예: 005930)"
                   className="flex-1"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
                 <Button type="submit" disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
-                  Analyze
+                  분석
                 </Button>
               </form>
             </CardContent>
@@ -94,7 +94,7 @@ export default function AnalysisPage() {
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
+              <AlertTitle>오류</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
@@ -104,11 +104,11 @@ export default function AnalysisPage() {
               <Card className="md:col-span-1">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    <span>AI Signal Analysis</span>
+                    <span>AI 신호 분석</span>
                     <Badge variant="outline">{result.stock_name} ({result.stock_code})</Badge>
                   </CardTitle>
                   <CardDescription>
-                    BNF Strategy based signal generation
+                    BNF 전략 기반 신호 생성
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
@@ -118,7 +118,7 @@ export default function AnalysisPage() {
                   />
 
                   <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Indicator Contribution</h4>
+                    <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">지표 기여도</h4>
                     <IndicatorContribution contributions={getContributions(result.indicator_scores)} />
                   </div>
                 </CardContent>
@@ -126,15 +126,15 @@ export default function AnalysisPage() {
 
               <Card className="md:col-span-1">
                 <CardHeader>
-                  <CardTitle>Analysis Details</CardTitle>
+                  <CardTitle>분석 상세</CardTitle>
                   <CardDescription>
-                    {new Date(result.analysis_date).toLocaleDateString()} Analysis
+                    {new Date(result.analysis_date).toLocaleDateString('ko-KR')} 분석
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Current Price</p>
+                      <p className="text-sm font-medium text-muted-foreground">현재가</p>
                       <p className="text-2xl font-bold">{formatKRW(result.current_price)}</p>
                     </div>
                     <Badge variant={result.change_pct >= 0 ? "profit" : "loss"} className="text-lg px-3 py-1">
@@ -143,7 +143,7 @@ export default function AnalysisPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <h4 className="text-sm font-medium">Analysis Reasoning</h4>
+                    <h4 className="text-sm font-medium">분석 근거</h4>
                     <ul className="space-y-2">
                       {result.reasons.map((reason, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -155,10 +155,10 @@ export default function AnalysisPage() {
                   </div>
 
                   <div className="p-4 bg-muted rounded-lg border border-dashed">
-                    <p className="text-sm font-medium mb-1">Recommendation</p>
+                    <p className="text-sm font-medium mb-1">투자 의견</p>
                     <p className="text-sm text-muted-foreground">
-                      Based on the {result.signal.replace('_', ' ')} signal with a confidence score of {result.score.toFixed(0)}, 
-                      {result.score >= 70 ? ' accumulation is recommended.' : result.score <= 30 ? ' reducing exposure is advised.' : ' monitoring for clearer signals is suggested.'}
+                      신뢰도 {result.score.toFixed(0)}점의 {result.signal.replace('_', ' ')} 신호를 기반으로, 
+                      {result.score >= 70 ? ' 매수 비중 확대를 권장합니다.' : result.score <= 30 ? ' 비중 축소를 권장합니다.' : ' 추가 신호 확인 후 진입을 권장합니다.'}
                     </p>
                   </div>
                 </CardContent>
@@ -169,7 +169,7 @@ export default function AnalysisPage() {
           {!result && !loading && !error && (
              <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
                <Search className="h-12 w-12 mx-auto mb-4 opacity-20" />
-               <p>Enter a stock code above to generate an AI analysis report.</p>
+               <p>위에 종목 코드를 입력하여 AI 분석 리포트를 생성하세요.</p>
              </div>
           )}
         </div>

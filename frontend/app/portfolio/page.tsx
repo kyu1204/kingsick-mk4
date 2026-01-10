@@ -104,9 +104,9 @@ export default function PortfolioPage() {
         <div className="space-y-6">
           {/* Page Header */}
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Portfolio</h1>
+            <h1 className="text-3xl font-bold tracking-tight">포트폴리오</h1>
             <p className="text-muted-foreground">
-              Your current holdings and position performance
+              현재 보유 종목 및 성과
             </p>
           </div>
 
@@ -122,23 +122,23 @@ export default function PortfolioPage() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Value</CardTitle>
+                <CardTitle className="text-sm font-medium">총 평가금액</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {totalValue.toLocaleString('ko-KR')}
-                  <span className="text-sm font-normal text-muted-foreground ml-1">KRW</span>
+                  <span className="text-sm font-normal text-muted-foreground ml-1">원</span>
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total P&L</CardTitle>
+                <CardTitle className="text-sm font-medium">총 손익</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className={`text-2xl font-bold ${totalPnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                   {totalPnl >= 0 ? '+' : ''}{totalPnl.toLocaleString('ko-KR')}
-                  <span className="text-sm font-normal ml-1">KRW</span>
+                  <span className="text-sm font-normal ml-1">원</span>
                 </div>
                 <p className={`text-sm ${totalPnl >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                   {totalPnl >= 0 ? '+' : ''}{totalPnlPercent.toFixed(2)}%
@@ -147,12 +147,12 @@ export default function PortfolioPage() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Positions</CardTitle>
+                <CardTitle className="text-sm font-medium">보유 종목</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {positions.length}
-                  <span className="text-sm font-normal text-muted-foreground ml-1">stocks</span>
+                  <span className="text-sm font-normal text-muted-foreground ml-1">종목</span>
                 </div>
               </CardContent>
             </Card>
@@ -161,22 +161,22 @@ export default function PortfolioPage() {
           {/* Positions Table */}
           <Card>
             <CardHeader>
-              <CardTitle>Open Positions</CardTitle>
+              <CardTitle>보유 종목</CardTitle>
               <CardDescription>
-                All your current stock holdings
+                현재 보유 중인 모든 종목
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {/* Table Header */}
                 <div className="grid grid-cols-7 gap-4 text-sm font-medium text-muted-foreground border-b pb-2">
-                  <div>Symbol</div>
-                  <div>Name</div>
-                  <div className="text-right">Qty</div>
-                  <div className="text-right">Avg Price</div>
-                  <div className="text-right">Current</div>
-                  <div className="text-right">P&L</div>
-                  <div className="text-center">Status</div>
+                  <div>종목코드</div>
+                  <div>종목명</div>
+                  <div className="text-right">수량</div>
+                  <div className="text-right">평균단가</div>
+                  <div className="text-right">현재가</div>
+                  <div className="text-right">손익</div>
+                  <div className="text-center">상태</div>
                 </div>
 
                 {/* Table Body */}
@@ -205,7 +205,7 @@ export default function PortfolioPage() {
                     </div>
                     <div className="text-center">
                       <Badge variant={pos.profit_loss >= 0 ? 'profit' : 'loss'}>
-                        {pos.profit_loss >= 0 ? 'Profit' : 'Loss'}
+                        {pos.profit_loss >= 0 ? '이익' : '손실'}
                       </Badge>
                     </div>
                   </div>

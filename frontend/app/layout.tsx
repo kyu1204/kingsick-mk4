@@ -11,11 +11,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'KingSick - AI Automated Trading',
+    default: 'KingSick - AI 자동매매',
     template: '%s | KingSick',
   },
-  description: 'AI-powered automated trading system for Korean stock market using BNF-style swing trading strategies',
-  keywords: ['trading', 'stock', 'automation', 'AI', 'Korea', 'KOSPI'],
+  description: 'BNF 스타일 스윙 트레이딩 전략을 활용한 AI 기반 한국 주식 자동매매 시스템',
+  keywords: ['트레이딩', '주식', '자동매매', 'AI', '한국', 'KOSPI'],
   authors: [{ name: 'KingSick Team' }],
   icons: {
     icon: '/favicon.ico',

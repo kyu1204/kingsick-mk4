@@ -150,30 +150,30 @@ export function InvitationManager() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Invitation Management
+              초대 관리
             </CardTitle>
             <CardDescription>
-              Create and manage invitation links for new users
+              새 사용자를 위한 초대 링크 생성 및 관리
             </CardDescription>
           </div>
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Invitation
+                초대 생성
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create Invitation</DialogTitle>
+                <DialogTitle>초대 생성</DialogTitle>
                 <DialogDescription>
-                  Generate a new invitation link that can be shared with a new user.
+                  새 사용자에게 공유할 수 있는 초대 링크를 생성합니다.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <label htmlFor="expiresInDays" className="text-sm font-medium">
-                    Expires in (days)
+                    만료 기간 (일)
                   </label>
                   <Input
                     id="expiresInDays"
@@ -184,7 +184,7 @@ export function InvitationManager() {
                     onChange={(e) => setExpiresInDays(parseInt(e.target.value) || 7)}
                   />
                   <p className="text-sm text-muted-foreground">
-                    The invitation will expire after {expiresInDays} day{expiresInDays > 1 ? 's' : ''}.
+                    초대는 {expiresInDays}일 후 만료됩니다.
                   </p>
                 </div>
               </div>
@@ -194,16 +194,16 @@ export function InvitationManager() {
                   onClick={() => setShowCreateDialog(false)}
                   disabled={isCreating}
                 >
-                  Cancel
+                  취소
                 </Button>
                 <Button onClick={handleCreate} disabled={isCreating}>
                   {isCreating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
+                      생성 중...
                     </>
                   ) : (
-                    'Create'
+                    '생성'
                   )}
                 </Button>
               </DialogFooter>
@@ -234,19 +234,19 @@ export function InvitationManager() {
         ) : invitations.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No invitations yet</p>
-            <p className="text-sm">Create an invitation to invite new users</p>
+            <p>아직 초대가 없습니다</p>
+            <p className="text-sm">새 사용자를 초대하려면 초대를 생성하세요</p>
           </div>
         ) : (
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Expires</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>코드</TableHead>
+                  <TableHead>상태</TableHead>
+                  <TableHead>생성일</TableHead>
+                  <TableHead>만료일</TableHead>
+                  <TableHead className="text-right">작업</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -262,11 +262,11 @@ export function InvitationManager() {
                     </TableCell>
                     <TableCell>
                       {invitation.used ? (
-                        <Badge variant="secondary">Used</Badge>
+                        <Badge variant="secondary">사용됨</Badge>
                       ) : isExpired(invitation.expires_at) ? (
-                        <Badge variant="destructive">Expired</Badge>
+                        <Badge variant="destructive">만료됨</Badge>
                       ) : (
-                        <Badge variant="profit">Active</Badge>
+                        <Badge variant="profit">활성</Badge>
                       )}
                     </TableCell>
                     <TableCell>

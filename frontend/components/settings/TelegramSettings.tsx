@@ -132,9 +132,9 @@ export function TelegramSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Telegram Notifications</CardTitle>
+        <CardTitle>텔레그램 알림</CardTitle>
         <CardDescription>
-          Connect your Telegram account to receive trading alerts
+          트레이딩 알림을 받으려면 텔레그램 계정을 연결하세요
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -153,15 +153,15 @@ export function TelegramSettings() {
           <>
             <div className="flex items-center justify-between p-4 border rounded-lg bg-green-500/5 border-green-500/20">
               <div>
-                <p className="font-medium">Telegram</p>
+                <p className="font-medium">텔레그램</p>
                 <p className="text-sm text-muted-foreground">
-                  Connected {status.linked_at && `on ${formatLinkedDate(status.linked_at)}`}
+                  연결됨 {status.linked_at && `${formatLinkedDate(status.linked_at)}`}
                 </p>
               </div>
-              <Badge variant="profit">Connected</Badge>
+              <Badge variant="profit">연결됨</Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              You will receive trading alerts and can approve/reject trades directly from Telegram.
+              트레이딩 알림을 받고 텔레그램에서 직접 거래를 승인/거절할 수 있습니다.
             </p>
             <Button
               variant="outline"
@@ -169,7 +169,7 @@ export function TelegramSettings() {
               onClick={handleUnlink}
               disabled={isUnlinking}
             >
-              {isUnlinking ? 'Disconnecting...' : 'Disconnect Telegram'}
+              {isUnlinking ? '연결 해제 중...' : '텔레그램 연결 해제'}
             </Button>
           </>
         ) : deepLink ? (
@@ -177,16 +177,16 @@ export function TelegramSettings() {
           <>
             <div className="flex items-center justify-between p-4 border rounded-lg border-blue-500/20 bg-blue-500/5">
               <div>
-                <p className="font-medium">Telegram</p>
+                <p className="font-medium">텔레그램</p>
                 <p className="text-sm text-muted-foreground">
-                  Waiting for connection...
+                  연결 대기 중...
                 </p>
               </div>
-              <Badge variant="secondary">Pending</Badge>
+              <Badge variant="secondary">대기중</Badge>
             </div>
             <div className="space-y-3">
               <p className="text-sm">
-                Click the button below to open Telegram and connect your account:
+                아래 버튼을 클릭하여 텔레그램을 열고 계정을 연결하세요:
               </p>
               <a
                 href={deepLink}
@@ -195,11 +195,11 @@ export function TelegramSettings() {
                 className="block"
               >
                 <Button className="w-full" variant="default">
-                  Open Telegram
+                  텔레그램 열기
                 </Button>
               </a>
               <p className="text-xs text-center text-muted-foreground">
-                Link expires in {formatTime(expiresIn)}
+                링크 만료까지 {formatTime(expiresIn)}
               </p>
             </div>
             <Button
@@ -210,7 +210,7 @@ export function TelegramSettings() {
                 setExpiresIn(0);
               }}
             >
-              Cancel
+              취소
             </Button>
           </>
         ) : (
@@ -218,22 +218,22 @@ export function TelegramSettings() {
           <>
             <div className="flex items-center justify-between p-4 border rounded-lg">
               <div>
-                <p className="font-medium">Telegram</p>
+                <p className="font-medium">텔레그램</p>
                 <p className="text-sm text-muted-foreground">
-                  Not connected
+                  연결되지 않음
                 </p>
               </div>
-              <Badge variant="secondary">Disconnected</Badge>
+              <Badge variant="secondary">미연결</Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              Connect your Telegram account to receive real-time trading alerts and approve/reject trades with a single tap.
+              텔레그램 계정을 연결하여 실시간 트레이딩 알림을 받고 한 번의 탭으로 거래를 승인/거절하세요.
             </p>
             <Button
               className="w-full"
               onClick={handleLink}
               disabled={isLinking}
             >
-              {isLinking ? 'Creating Link...' : 'Connect Telegram'}
+              {isLinking ? '링크 생성 중...' : '텔레그램 연결'}
             </Button>
           </>
         )}

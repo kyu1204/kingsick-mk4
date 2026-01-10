@@ -11,6 +11,7 @@ import {
   History,
   ChevronLeft,
   ChevronRight,
+  FlaskConical,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,32 +25,37 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    title: 'Dashboard',
+    title: '대시보드',
     href: '/dashboard',
     icon: LayoutDashboard,
   },
   {
-    title: 'Watchlist',
+    title: '관심종목',
     href: '/watchlist',
     icon: List,
   },
   {
-    title: 'Portfolio',
+    title: '포트폴리오',
     href: '/portfolio',
     icon: Wallet,
   },
   {
-    title: 'Analysis',
+    title: '분석',
     href: '/analysis',
     icon: TrendingUp,
   },
   {
-    title: 'Trade History',
+    title: '백테스트',
+    href: '/backtest',
+    icon: FlaskConical,
+  },
+  {
+    title: '거래 내역',
     href: '/history',
     icon: History,
   },
   {
-    title: 'Settings',
+    title: '설정',
     href: '/settings',
     icon: Settings,
   },
@@ -102,7 +108,7 @@ export function Sidebar() {
             ) : (
               <>
                 <ChevronLeft className="h-4 w-4 mr-2" />
-                <span>Collapse</span>
+                <span>접기</span>
               </>
             )}
           </Button>

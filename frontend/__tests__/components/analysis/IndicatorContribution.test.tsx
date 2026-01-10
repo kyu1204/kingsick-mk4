@@ -24,9 +24,9 @@ describe('IndicatorContribution', () => {
   it('displays weights correctly', () => {
     render(<IndicatorContribution contributions={mockContributions} />)
     
-    expect(screen.getByText('30% weight')).toBeInTheDocument()
-    expect(screen.getByText('20% weight')).toBeInTheDocument()
-    expect(screen.getByText('15% weight')).toBeInTheDocument()
+    expect(screen.getByText('가중치 30%')).toBeInTheDocument()
+    expect(screen.getByText('가중치 20%')).toBeInTheDocument()
+    expect(screen.getByText('가중치 15%')).toBeInTheDocument()
   })
 
   it('applies correct colors based on score', () => {

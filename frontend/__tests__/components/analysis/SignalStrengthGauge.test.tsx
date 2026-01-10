@@ -8,7 +8,7 @@ describe('SignalStrengthGauge', () => {
     
     expect(screen.getByText('85')).toBeInTheDocument()
     expect(screen.getByText('STRONG BUY')).toBeInTheDocument()
-    expect(screen.getByText('Score')).toBeInTheDocument()
+    expect(screen.getByText('점수')).toBeInTheDocument()
   })
 
   it('applies correct colors for BUY signal', () => {

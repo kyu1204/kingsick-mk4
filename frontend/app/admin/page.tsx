@@ -11,9 +11,9 @@ export default function AdminPage() {
         <div className="space-y-6">
           {/* Page Header */}
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Admin</h1>
+            <h1 className="text-3xl font-bold tracking-tight">관리자</h1>
             <p className="text-muted-foreground">
-              Manage users and system settings
+              사용자 및 시스템 설정 관리
             </p>
           </div>
 

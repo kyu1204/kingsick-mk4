@@ -111,3 +111,16 @@ export type {
 } from './slack';
 
 export { scannerApi } from './scanner';
+
+export { backtestApi } from './backtest';
+export type {
+  BacktestRunRequest,
+  PriceSyncRequest,
+  BacktestTrade,
+  BacktestResult,
+  BacktestListItem,
+  BacktestListResponse,
+  PriceSyncResponse,
+  StockPriceData,
+  PriceListResponse,
+} from './backtest';

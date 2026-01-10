@@ -49,11 +49,11 @@ describe('TelegramSettings', () => {
       render(<TelegramSettings />);
 
       await waitFor(() => {
-        expect(screen.getByText('Not connected')).toBeInTheDocument();
+        expect(screen.getByText('연결되지 않음')).toBeInTheDocument();
       });
 
-      expect(screen.getByText('Disconnected')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /connect telegram/i })).toBeInTheDocument();
+      expect(screen.getByText('미연결')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /텔레그램 연결/i })).toBeInTheDocument();
     });
 
     it('should call createLinkToken when connect button clicked', async () => {
@@ -65,10 +65,10 @@ describe('TelegramSettings', () => {
       render(<TelegramSettings />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /connect telegram/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /텔레그램 연결/i })).toBeInTheDocument();
       });
 
-      const connectButton = screen.getByRole('button', { name: /connect telegram/i });
+      const connectButton = screen.getByRole('button', { name: /텔레그램 연결/i });
       await userEvent.click(connectButton);
 
       await waitFor(() => {
@@ -85,15 +85,15 @@ describe('TelegramSettings', () => {
       render(<TelegramSettings />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /connect telegram/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /텔레그램 연결/i })).toBeInTheDocument();
       });
 
-      const connectButton = screen.getByRole('button', { name: /connect telegram/i });
+      const connectButton = screen.getByRole('button', { name: /텔레그램 연결/i });
       await userEvent.click(connectButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Waiting for connection...')).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /open telegram/i })).toBeInTheDocument();
+        expect(screen.getByText('연결 대기 중...')).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /텔레그램 열기/i })).toBeInTheDocument();
       });
     });
 
@@ -105,10 +105,10 @@ describe('TelegramSettings', () => {
       render(<TelegramSettings />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /connect telegram/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /텔레그램 연결/i })).toBeInTheDocument();
       });
 
-      const connectButton = screen.getByRole('button', { name: /connect telegram/i });
+      const connectButton = screen.getByRole('button', { name: /텔레그램 연결/i });
       await userEvent.click(connectButton);
 
       await waitFor(() => {
@@ -133,15 +133,15 @@ describe('TelegramSettings', () => {
       render(<TelegramSettings />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /connect telegram/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /텔레그램 연결/i })).toBeInTheDocument();
       });
 
-      const connectButton = screen.getByRole('button', { name: /connect telegram/i });
+      const connectButton = screen.getByRole('button', { name: /텔레그램 연결/i });
       await userEvent.click(connectButton);
 
       await waitFor(() => {
         // Check for expiry message with time format (M:SS)
-        const expiryText = screen.getByText(/expires in \d+:\d{2}/i);
+        const expiryText = screen.getByText(/링크 만료까지 \d+:\d{2}/i);
         expect(expiryText).toBeInTheDocument();
       });
     });
@@ -150,21 +150,21 @@ describe('TelegramSettings', () => {
       render(<TelegramSettings />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /connect telegram/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /텔레그램 연결/i })).toBeInTheDocument();
       });
 
-      const connectButton = screen.getByRole('button', { name: /connect telegram/i });
+      const connectButton = screen.getByRole('button', { name: /텔레그램 연결/i });
       await userEvent.click(connectButton);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /취소/i })).toBeInTheDocument();
       });
 
-      const cancelButton = screen.getByRole('button', { name: /cancel/i });
+      const cancelButton = screen.getByRole('button', { name: /취소/i });
       await userEvent.click(cancelButton);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /connect telegram/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /텔레그램 연결/i })).toBeInTheDocument();
       });
     });
 
@@ -172,14 +172,14 @@ describe('TelegramSettings', () => {
       render(<TelegramSettings />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /connect telegram/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /텔레그램 연결/i })).toBeInTheDocument();
       });
 
-      const connectButton = screen.getByRole('button', { name: /connect telegram/i });
+      const connectButton = screen.getByRole('button', { name: /텔레그램 연결/i });
       await userEvent.click(connectButton);
 
       await waitFor(() => {
-        const openTelegramLink = screen.getByRole('link', { name: /open telegram/i });
+        const openTelegramLink = screen.getByRole('link', { name: /텔레그램 열기/i });
         expect(openTelegramLink).toHaveAttribute(
           'href',
           'https://t.me/test_bot?start=token123'
@@ -203,17 +203,18 @@ describe('TelegramSettings', () => {
       render(<TelegramSettings />);
 
       await waitFor(() => {
-        expect(screen.getByText('Connected')).toBeInTheDocument();
+        expect(screen.getByText('연결됨')).toBeInTheDocument();
       });
 
-      expect(screen.getByRole('button', { name: /disconnect telegram/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /텔레그램 연결 해제/i })).toBeInTheDocument();
     });
 
     it('should show connected date', async () => {
       render(<TelegramSettings />);
 
       await waitFor(() => {
-        expect(screen.getByText(/connected on/i)).toBeInTheDocument();
+        const connectedElements = screen.getAllByText(/연결됨/i);
+        expect(connectedElements.length).toBeGreaterThan(0);
       });
     });
 
@@ -225,10 +226,10 @@ describe('TelegramSettings', () => {
       render(<TelegramSettings />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /disconnect telegram/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /텔레그램 연결 해제/i })).toBeInTheDocument();
       });
 
-      const disconnectButton = screen.getByRole('button', { name: /disconnect telegram/i });
+      const disconnectButton = screen.getByRole('button', { name: /텔레그램 연결 해제/i });
       await userEvent.click(disconnectButton);
 
       await waitFor(() => {
@@ -244,14 +245,14 @@ describe('TelegramSettings', () => {
       render(<TelegramSettings />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /disconnect telegram/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /텔레그램 연결 해제/i })).toBeInTheDocument();
       });
 
-      const disconnectButton = screen.getByRole('button', { name: /disconnect telegram/i });
+      const disconnectButton = screen.getByRole('button', { name: /텔레그램 연결 해제/i });
       await userEvent.click(disconnectButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Not connected')).toBeInTheDocument();
+        expect(screen.getByText('연결되지 않음')).toBeInTheDocument();
       });
     });
 
@@ -261,10 +262,10 @@ describe('TelegramSettings', () => {
       render(<TelegramSettings />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /disconnect telegram/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /텔레그램 연결 해제/i })).toBeInTheDocument();
       });
 
-      const disconnectButton = screen.getByRole('button', { name: /disconnect telegram/i });
+      const disconnectButton = screen.getByRole('button', { name: /텔레그램 연결 해제/i });
       await userEvent.click(disconnectButton);
 
       await waitFor(() => {
@@ -304,15 +305,15 @@ describe('TelegramSettings', () => {
       render(<TelegramSettings />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /connect telegram/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /텔레그램 연결/i })).toBeInTheDocument();
       });
 
       // Start linking
-      const connectButton = screen.getByRole('button', { name: /connect telegram/i });
+      const connectButton = screen.getByRole('button', { name: /텔레그램 연결/i });
       await user.click(connectButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Waiting for connection...')).toBeInTheDocument();
+        expect(screen.getByText('연결 대기 중...')).toBeInTheDocument();
       });
 
       // Clear initial calls
@@ -332,15 +333,15 @@ describe('TelegramSettings', () => {
       render(<TelegramSettings />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /connect telegram/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /텔레그램 연결/i })).toBeInTheDocument();
       });
 
       // Start linking
-      const connectButton = screen.getByRole('button', { name: /connect telegram/i });
+      const connectButton = screen.getByRole('button', { name: /텔레그램 연결/i });
       await user.click(connectButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Waiting for connection...')).toBeInTheDocument();
+        expect(screen.getByText('연결 대기 중...')).toBeInTheDocument();
       });
 
       // Simulate successful linking on next poll
@@ -355,7 +356,7 @@ describe('TelegramSettings', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Connected')).toBeInTheDocument();
+        expect(screen.getByText('연결됨')).toBeInTheDocument();
       }, { timeout: 5000 });
     });
   });

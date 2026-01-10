@@ -70,7 +70,7 @@ function createApiClient(): AxiosInstance {
     (error: AxiosError<{ detail?: string }>) => {
       if (error.response) {
         const { status, data } = error.response;
-        const message = data?.detail || error.message || 'An error occurred';
+        const message = data?.detail || error.message || '오류가 발생했습니다';
         throw new ApiError(status, message, data);
       }
       throw error;

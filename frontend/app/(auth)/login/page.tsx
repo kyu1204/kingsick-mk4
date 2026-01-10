@@ -58,9 +58,9 @@ export default function LoginPage() {
             <Activity className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold">KingSick</span>
           </div>
-          <CardTitle className="text-2xl">Welcome back</CardTitle>
+          <CardTitle className="text-2xl">다시 오신 것을 환영합니다</CardTitle>
           <CardDescription>
-            Enter your credentials to access your trading dashboard
+            트레이딩 대시보드에 접속하려면 로그인하세요
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -73,7 +73,7 @@ export default function LoginPage() {
             )}
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
-                Email
+                이메일
               </label>
               <Input
                 id="email"
@@ -88,12 +88,12 @@ export default function LoginPage() {
             </div>
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">
-                Password
+                비밀번호
               </label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="비밀번호를 입력하세요"
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -107,14 +107,14 @@ export default function LoginPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  로그인 중...
                 </>
               ) : (
-                'Sign In'
+                '로그인'
               )}
             </Button>
             <p className="text-sm text-muted-foreground text-center">
-              Need an account? Contact an admin for an invitation link.
+              계정이 없으신가요? 관리자에게 초대 링크를 요청하세요.
             </p>
           </CardFooter>
         </form>

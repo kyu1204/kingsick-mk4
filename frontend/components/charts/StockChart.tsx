@@ -240,7 +240,7 @@ export function StockChart({
         className="flex items-center justify-center bg-muted/20 rounded-lg animate-pulse"
         style={{ height }}
       >
-        <span className="text-muted-foreground">Loading chart...</span>
+        <span className="text-muted-foreground">차트 로딩중...</span>
       </div>
     );
   }
@@ -264,7 +264,7 @@ export function StockChart({
         className="flex items-center justify-center border-2 border-dashed border-muted rounded-lg"
         style={{ height }}
       >
-        <span className="text-muted-foreground">No data available</span>
+        <span className="text-muted-foreground">데이터가 없습니다</span>
       </div>
     );
   }

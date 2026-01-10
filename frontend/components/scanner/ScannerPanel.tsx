@@ -52,10 +52,10 @@ export function ScannerPanel() {
           <div>
             <CardTitle className="text-xl flex items-center gap-2">
               <Activity className="h-5 w-5 text-primary" />
-              AI Market Scanner
+              AI 시장 스캐너
             </CardTitle>
             <CardDescription>
-              Scan the Korean market for AI-powered trading opportunities
+              AI 기반으로 한국 시장의 트레이딩 기회를 스캔합니다
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -67,12 +67,12 @@ export function ScannerPanel() {
               {loading ? (
                 <div className="flex items-center gap-2">
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                  Scanning...
+                  스캔 중...
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <Search className="h-4 w-4" />
-                  Scan Market
+                  시장 스캔
                 </div>
               )}
             </Button>
@@ -81,19 +81,19 @@ export function ScannerPanel() {
 
         <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end bg-muted/30 p-4 rounded-lg border border-border/40">
           <div className="grid gap-2 flex-1">
-            <label className="text-sm font-medium">Scan Type</label>
+            <label className="text-sm font-medium">스캔 유형</label>
             <select
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={scanType} 
               onChange={(e) => setScanType(e.target.value as ScanTypeEnum)}
             >
-              <option value="BUY">Buy Signals</option>
-              <option value="SELL">Sell Signals</option>
+              <option value="BUY">매수 신호</option>
+              <option value="SELL">매도 신호</option>
             </select>
           </div>
 
           <div className="grid gap-2 flex-1">
-            <label className="text-sm font-medium">Min Confidence (0.0 - 1.0)</label>
+            <label className="text-sm font-medium">최소 신뢰도 (0.0 - 1.0)</label>
             <Input
               type="number"
               min={0}
@@ -105,7 +105,7 @@ export function ScannerPanel() {
           </div>
 
           <div className="grid gap-2 flex-1">
-            <label className="text-sm font-medium">Result Limit</label>
+            <label className="text-sm font-medium">결과 수 제한</label>
             <Input
               type="number"
               min={1}
@@ -129,12 +129,12 @@ export function ScannerPanel() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Signal</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
-                  <TableHead className="text-right">Confidence</TableHead>
+                  <TableHead>종목</TableHead>
+                  <TableHead>신호</TableHead>
+                  <TableHead className="text-right">현재가</TableHead>
+                  <TableHead className="text-right">신뢰도</TableHead>
                   <TableHead className="text-right">RSI</TableHead>
-                  <TableHead className="text-center">Volume Spike</TableHead>
+                  <TableHead className="text-center">거래량 급등</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -171,7 +171,7 @@ export function ScannerPanel() {
                     <TableCell className="text-center">
                       {result.volume_spike && (
                         <Badge variant="outline" className="text-xs border-orange-500/50 text-orange-500 bg-orange-500/10">
-                          SPIKE
+                          급등
                         </Badge>
                       )}
                     </TableCell>
@@ -185,9 +185,9 @@ export function ScannerPanel() {
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
               <SlidersHorizontal className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="mt-4 text-lg font-semibold">No Scan Results</h3>
+            <h3 className="mt-4 text-lg font-semibold">스캔 결과 없음</h3>
             <p className="text-sm text-muted-foreground">
-              Adjust parameters and click Scan Market to find opportunities.
+              파라미터를 조정하고 시장 스캔을 클릭하여 기회를 찾으세요.
             </p>
           </div>
         )}

@@ -83,9 +83,9 @@ export function SlackSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Slack Notifications</CardTitle>
+        <CardTitle>Slack 알림</CardTitle>
         <CardDescription>
-          Connect Slack to receive trading alerts
+          트레이딩 알림을 받으려면 Slack을 연결하세요
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -105,13 +105,13 @@ export function SlackSettings() {
               <div>
                 <p className="font-medium">Slack</p>
                 <p className="text-sm text-muted-foreground">
-                  Configured: {status.webhook_url_masked}
+                  설정됨: {status.webhook_url_masked}
                 </p>
               </div>
-              <Badge variant="profit">Connected</Badge>
+              <Badge variant="profit">연결됨</Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              You will receive trading alerts in your configured Slack channel.
+              설정된 Slack 채널에서 트레이딩 알림을 받습니다.
             </p>
             <div className="flex gap-2">
               <Button
@@ -120,7 +120,7 @@ export function SlackSettings() {
                 onClick={handleTest}
                 disabled={isTesting}
               >
-                {isTesting ? 'Sending...' : 'Test'}
+                {isTesting ? '전송 중...' : '테스트'}
               </Button>
               <Button
                 variant="outline"
@@ -128,7 +128,7 @@ export function SlackSettings() {
                 onClick={handleDelete}
                 disabled={isDeleting}
               >
-                {isDeleting ? 'Disconnecting...' : 'Disconnect'}
+                {isDeleting ? '연결 해제 중...' : '연결 해제'}
               </Button>
             </div>
           </>
@@ -138,10 +138,10 @@ export function SlackSettings() {
               <div>
                 <p className="font-medium">Slack</p>
                 <p className="text-sm text-muted-foreground">
-                  Not configured
+                  설정되지 않음
                 </p>
               </div>
-              <Badge variant="secondary">Disconnected</Badge>
+              <Badge variant="secondary">미연결</Badge>
             </div>
             <div className="space-y-2">
               <Input
@@ -150,7 +150,7 @@ export function SlackSettings() {
                 onChange={(e) => setWebhookUrl(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Enter your Slack Incoming Webhook URL
+                Slack Incoming Webhook URL을 입력하세요
               </p>
             </div>
             <Button
@@ -158,7 +158,7 @@ export function SlackSettings() {
               onClick={handleSave}
               disabled={isSaving || !webhookUrl}
             >
-              {isSaving ? 'Saving...' : 'Save Webhook'}
+              {isSaving ? '저장 중...' : '웹훅 저장'}
             </Button>
           </>
         )}

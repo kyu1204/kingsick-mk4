@@ -57,7 +57,7 @@ const SignalStrengthGauge = React.forwardRef<HTMLDivElement, SignalStrengthGauge
               {Math.round(strength)}
             </span>
             <span className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mt-1">
-              Score
+              점수
             </span>
           </div>
         </div>

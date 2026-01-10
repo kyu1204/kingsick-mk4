@@ -87,18 +87,18 @@ export default function SettingsPage() {
       <MainLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+            <h1 className="text-3xl font-bold tracking-tight">설정</h1>
             <p className="text-muted-foreground">
-              Configure your trading preferences and API connections
+              트레이딩 환경 설정 및 API 연결 관리
             </p>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Trading Mode</CardTitle>
+                <CardTitle>트레이딩 모드</CardTitle>
                 <CardDescription>
-                  Choose between automated trading or manual approval
+                  자동 매매 또는 수동 승인 중 선택
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -112,13 +112,13 @@ export default function SettingsPage() {
                   } ${isSwitchingMode ? 'cursor-wait' : 'cursor-pointer'}`}
                 >
                   <div className="text-left">
-                    <p className="font-medium">AUTO Mode</p>
+                    <p className="font-medium">자동 모드</p>
                     <p className="text-sm text-muted-foreground">
-                      Automatically execute trades based on AI signals
+                      AI 신호에 따라 자동으로 매매 실행
                     </p>
                   </div>
                   <Badge variant={tradingMode === TradingMode.AUTO ? 'profit' : 'secondary'}>
-                    {tradingMode === TradingMode.AUTO ? 'Active' : 'Inactive'}
+                    {tradingMode === TradingMode.AUTO ? '활성화' : '비활성화'}
                   </Badge>
                 </button>
                 <button
@@ -131,13 +131,13 @@ export default function SettingsPage() {
                   } ${isSwitchingMode ? 'cursor-wait' : 'cursor-pointer'}`}
                 >
                   <div className="text-left">
-                    <p className="font-medium">ALERT Mode</p>
+                    <p className="font-medium">알림 모드</p>
                     <p className="text-sm text-muted-foreground">
-                      Send notifications for manual approval
+                      수동 승인을 위한 알림 전송
                     </p>
                   </div>
                   <Badge variant={tradingMode === TradingMode.ALERT ? 'profit' : 'secondary'}>
-                    {tradingMode === TradingMode.ALERT ? 'Active' : 'Inactive'}
+                    {tradingMode === TradingMode.ALERT ? '활성화' : '비활성화'}
                   </Badge>
                 </button>
               </CardContent>
@@ -145,14 +145,14 @@ export default function SettingsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Risk Management</CardTitle>
+                <CardTitle>리스크 관리</CardTitle>
                 <CardDescription>
-                  Set your risk tolerance and loss limits
+                  위험 허용도 및 손실 한도 설정
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Daily Loss Limit (%)</label>
+                  <label className="text-sm font-medium">일일 손실 한도 (%)</label>
                   <Input
                     type="number"
                     placeholder="-10"
@@ -167,7 +167,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Stop Loss (%)</label>
+                  <label className="text-sm font-medium">손절 (%)</label>
                   <Input
                     type="number"
                     placeholder="-5"
@@ -182,7 +182,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Take Profit (%)</label>
+                  <label className="text-sm font-medium">익절 (%)</label>
                   <Input
                     type="number"
                     placeholder="10"
@@ -201,7 +201,7 @@ export default function SettingsPage() {
                   onClick={handleSaveRiskSettings}
                   disabled={isLoadingRisk || isSavingRisk}
                 >
-                  {isSavingRisk ? 'Saving...' : 'Save Risk Settings'}
+                  {isSavingRisk ? '저장 중...' : '리스크 설정 저장'}
                 </Button>
               </CardContent>
             </Card>

@@ -37,18 +37,18 @@ export function RegisterForm() {
 
     // Validate passwords match
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('비밀번호가 일치하지 않습니다');
       return;
     }
 
     // Validate password length
     if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError('비밀번호는 최소 8자 이상이어야 합니다');
       return;
     }
 
     if (!invitationCode) {
-      setError('Invalid invitation link');
+      setError('유효하지 않은 초대 링크입니다');
       return;
     }
 
@@ -87,23 +87,23 @@ export function RegisterForm() {
               <Activity className="h-8 w-8 text-primary" />
               <span className="text-2xl font-bold">KingSick</span>
             </div>
-            <CardTitle className="text-2xl">Invalid Invitation</CardTitle>
+            <CardTitle className="text-2xl">유효하지 않은 초대</CardTitle>
             <CardDescription>
-              You need a valid invitation link to create an account.
+              계정을 생성하려면 유효한 초대 링크가 필요합니다.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Please contact an administrator to get an invitation link.
+                관리자에게 문의하여 초대 링크를 받으세요.
               </AlertDescription>
             </Alert>
           </CardContent>
           <CardFooter>
             <Link href="/login" className="w-full">
               <Button variant="outline" className="w-full">
-                Back to Login
+                로그인으로 돌아가기
               </Button>
             </Link>
           </CardFooter>
@@ -121,9 +121,9 @@ export function RegisterForm() {
             <div className="flex items-center justify-center gap-2 mb-4">
               <CheckCircle className="h-8 w-8 text-green-500" />
             </div>
-            <CardTitle className="text-2xl">Registration Successful!</CardTitle>
+            <CardTitle className="text-2xl">회원가입 완료!</CardTitle>
             <CardDescription>
-              Your account has been created. Redirecting to login...
+              계정이 생성되었습니다. 로그인 페이지로 이동합니다...
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
@@ -142,9 +142,9 @@ export function RegisterForm() {
             <Activity className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold">KingSick</span>
           </div>
-          <CardTitle className="text-2xl">Create an account</CardTitle>
+          <CardTitle className="text-2xl">계정 만들기</CardTitle>
           <CardDescription>
-            Start your AI-powered trading journey today
+            AI 기반 트레이딩을 시작하세요
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -157,7 +157,7 @@ export function RegisterForm() {
             )}
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
-                Email
+                이메일
               </label>
               <Input
                 id="email"
@@ -172,12 +172,12 @@ export function RegisterForm() {
             </div>
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">
-                Password
+                비밀번호
               </label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Create a strong password (min 8 chars)"
+                placeholder="안전한 비밀번호 입력 (최소 8자)"
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -188,12 +188,12 @@ export function RegisterForm() {
             </div>
             <div className="space-y-2">
               <label htmlFor="confirmPassword" className="text-sm font-medium">
-                Confirm Password
+                비밀번호 확인
               </label>
               <Input
                 id="confirmPassword"
                 type="password"
-                placeholder="Confirm your password"
+                placeholder="비밀번호 다시 입력"
                 autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -207,16 +207,16 @@ export function RegisterForm() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating account...
+                  계정 생성 중...
                 </>
               ) : (
-                'Create Account'
+                '계정 만들기'
               )}
             </Button>
             <p className="text-sm text-muted-foreground text-center">
-              Already have an account?{' '}
+              이미 계정이 있으신가요?{' '}
               <Link href="/login" className="text-primary hover:underline">
-                Sign in
+                로그인
               </Link>
             </p>
           </CardFooter>

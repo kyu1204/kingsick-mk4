@@ -38,7 +38,7 @@ const IndicatorContribution = React.forwardRef<HTMLDivElement, IndicatorContribu
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{item.name}</span>
                   <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                    {item.weight}% weight
+                    가중치 {item.weight}%
                   </span>
                 </div>
                 <span className={cn("font-bold font-mono", textColor)}>
