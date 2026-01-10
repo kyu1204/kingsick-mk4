@@ -611,37 +611,40 @@ def downgrade():
 ## 검증 체크리스트
 
 ### Task 4-1: 과거 데이터 수집
-- [ ] StockPrice 모델 생성 및 마이그레이션
-- [ ] PriceHistoryService 구현
-- [ ] KIS API 일봉 데이터 수집 연동
-- [ ] 증분 동기화 동작 확인
-- [ ] API 엔드포인트 테스트
+- [x] StockPrice 모델 생성 및 마이그레이션
+- [x] PriceHistoryService 구현
+- [x] KIS API 일봉 데이터 수집 연동
+- [x] 증분 동기화 동작 확인
+- [x] API 엔드포인트 테스트
 
 ### Task 4-2: 백테스팅 엔진
-- [ ] BacktestEngine 클래스 구현
-- [ ] 거래 비용 (수수료, 세금) 반영
-- [ ] 손절/익절 로직 동작
-- [ ] 일별 자산 추적
-- [ ] 결과 지표 계산 정확성
+- [x] BacktestEngine 클래스 구현
+- [x] 거래 비용 (수수료, 세금) 반영
+- [x] 손절/익절 로직 동작
+- [x] 일별 자산 추적
+- [x] 결과 지표 계산 정확성
 
 ### Task 4-3: 결과 리포트
-- [ ] MetricsCards 컴포넌트
-- [ ] EquityCurveChart 컴포넌트
-- [ ] TradesTable 컴포넌트
-- [ ] DrawdownChart 컴포넌트
-- [ ] 백테스트 결과 페이지 통합
+- [ ] MetricsCards 컴포넌트 (백로그)
+- [ ] EquityCurveChart 컴포넌트 (백로그)
+- [ ] TradesTable 컴포넌트 (백로그)
+- [ ] DrawdownChart 컴포넌트 (백로그)
+- [ ] 백테스트 결과 페이지 통합 (백로그)
+- [x] 백테스트 결과 저장/조회/삭제 API
 
 ### Task 4-4: 시장 상태 분석
-- [ ] KOSPI/KOSDAQ 지수 분석
-- [ ] 섹터 분석 API
-- [ ] 시장 상태 페이지 UI
+- [x] KOSPI/KOSDAQ 지수 분석
+- [ ] 섹터 분석 API (백로그)
+- [ ] 시장 상태 페이지 UI (백로그)
+- [x] MarketAnalyzer 서비스 구현
+- [x] Fear-Greed 지수 구현
 
 ### Task 4-5: AI 추천 종목
-- [ ] 스코어링 로직 구현
-- [ ] 추천 API
-- [ ] 추천 목록 UI
+- [x] 스코어링 로직 구현
+- [x] 추천 API
+- [x] 추천 목록 UI (Analysis 페이지 통합)
 
 ### Task 4-6: 신호 강도 시각화
-- [ ] SignalStrengthGauge 컴포넌트
-- [ ] IndicatorContribution 컴포넌트
-- [ ] Analysis 페이지 통합
+- [x] SignalStrengthGauge 컴포넌트
+- [x] IndicatorContribution 컴포넌트
+- [x] Analysis 페이지 통합

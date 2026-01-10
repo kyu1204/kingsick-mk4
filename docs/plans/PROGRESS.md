@@ -1,7 +1,7 @@
 # KingSick 개발 진행 상황
 
 > **마지막 업데이트**: 2026-01-10
-> **현재 Phase**: Phase 3 완료 (AI Scanner + AlertStore 완료)
+> **현재 Phase**: Phase 4 완료 (백테스팅 및 AI 분석)
 > **담당자**: 장비 이동 시에도 이 문서를 통해 작업 상태 추적
 
 ---
@@ -13,7 +13,7 @@
 | Phase 1 | ✅ 완료 | 핵심 자동매매 | 2026-01-09 |
 | Phase 2 | ✅ 완료 | 모니터링 (사용자 인증, 대시보드) | 2026-01-09 |
 | Phase 3 | ✅ 완료 | 확장 (종목 관리, 메신저 알림, AI 스캔) | 2026-01-10 |
-| Phase 4 | ⏳ 대기 | 고도화 (백테스팅, AI 분석) | - |
+| Phase 4 | ✅ 완료 | 고도화 (백테스팅, AI 분석) | 2026-01-10 |
 
 ---
 
@@ -231,30 +231,122 @@
 
 ---
 
-## Phase 4: 고도화 🔄
+## Phase 4: 고도화 ✅
 
 > **설계 문서**: `docs/plans/2026-01-10-phase4-backtest-design.md`
 
-### Task 목록
+### 전체 Task 목록
 
-| # | Task | 상태 | 우선순위 | 비고 |
+| # | Task | 상태 | 우선순위 | 커밋 |
 |---|------|------|----------|------|
-| 4-1 | 과거 데이터 수집 및 저장 | 🔄 진행중 | P1 | PostgreSQL + 파티셔닝 |
-| 4-2 | 전략 시뮬레이션 엔진 (백테스팅) | ⏳ 대기 | P1 | BacktestEngine |
-| 4-3 | 결과 리포트 (수익률, MDD, 샤프비율) | ⏳ 대기 | P2 | Frontend 차트 |
-| 4-4 | 시장 상태 분석 페이지 | ⏳ 대기 | P2 | KOSPI/KOSDAQ 분석 |
-| 4-5 | AI 추천 종목 | ⏳ 대기 | P3 | 스코어링 기반 |
-| 4-6 | 신호 강도 시각화 | ⏳ 대기 | P2 | 게이지 + 차트 |
+| 4-1 | 과거 데이터 수집 및 저장 | ✅ 완료 | P1 | adb94ec |
+| 4-2 | 전략 시뮬레이션 엔진 (백테스팅) | ✅ 완료 | P1 | dfb6bfe |
+| 4-3 | 결과 리포트 (수익률, MDD, 샤프비율) | ✅ 완료 | P2 | eae47ac |
+| 4-4 | 시장 상태 분석 | ✅ 완료 | P2 | 77e8a15 |
+| 4-5 | AI 추천 종목 | ✅ 완료 | P3 | abd5137 |
+| 4-6 | 신호 강도 시각화 | ✅ 완료 | P2 | dd4f856 |
 
-### Task 4-1: 과거 데이터 수집 및 저장 🔄
+### Task 4-1: 과거 데이터 수집 및 저장 ✅
 
 | # | 세부 Task | 상태 | 설명 |
 |---|-----------|------|------|
-| 4-1-1 | StockPrice 모델 | ⏳ 대기 | 일봉 데이터 모델 + 마이그레이션 |
-| 4-1-2 | PriceHistoryService | ⏳ 대기 | 수집/저장 서비스 |
-| 4-1-3 | KIS API 일봉 연동 | ⏳ 대기 | 과거 시세 조회 API |
-| 4-1-4 | API 라우터 | ⏳ 대기 | /backtest/prices 엔드포인트 |
-| 4-1-5 | 테스트 작성 | ⏳ 대기 | 단위/통합 테스트 |
+| 4-1-1 | StockPrice 모델 | ✅ 완료 | 일봉 데이터 모델 + 마이그레이션 |
+| 4-1-2 | PriceHistoryService | ✅ 완료 | 수집/저장 서비스 |
+| 4-1-3 | KIS API 일봉 연동 | ✅ 완료 | 과거 시세 조회 API |
+| 4-1-4 | API 라우터 | ✅ 완료 | /backtest/prices 엔드포인트 |
+| 4-1-5 | 테스트 작성 | ✅ 완료 | 단위/통합 테스트 |
+
+### Task 4-2: 백테스팅 엔진 ✅
+
+| # | 세부 Task | 상태 | 설명 |
+|---|-----------|------|------|
+| 4-2-1 | BacktestEngine 클래스 | ✅ 완료 | 시뮬레이션 엔진 |
+| 4-2-2 | 거래 비용 반영 | ✅ 완료 | 수수료 0.015% + 세금 0.23% |
+| 4-2-3 | 손절/익절 로직 | ✅ 완료 | 설정 기반 자동 청산 |
+| 4-2-4 | 일별 자산 추적 | ✅ 완료 | equity_curve 기록 |
+| 4-2-5 | 결과 지표 계산 | ✅ 완료 | 수익률, MDD, 샤프비율, 승률 |
+
+### Task 4-3: 결과 리포트 API ✅
+
+| # | 세부 Task | 상태 | 설명 |
+|---|-----------|------|------|
+| 4-3-1 | BacktestResult 모델 | ✅ 완료 | 결과 저장 DB 모델 |
+| 4-3-2 | 결과 저장 API | ✅ 완료 | POST /backtest/run |
+| 4-3-3 | 결과 조회 API | ✅ 완료 | GET /backtest/results |
+| 4-3-4 | 결과 삭제 API | ✅ 완료 | DELETE /backtest/results/{id} |
+
+### Task 4-4: 시장 상태 분석 ✅
+
+| # | 세부 Task | 상태 | 설명 |
+|---|-----------|------|------|
+| 4-4-1 | MarketAnalyzer 서비스 | ✅ 완료 | KOSPI/KOSDAQ 지수 분석 |
+| 4-4-2 | Fear-Greed 지수 | ✅ 완료 | 투자 심리 지표 |
+| 4-4-3 | 시장 상태 API | ✅ 완료 | GET /analysis/market |
+| 4-4-4 | 종목 상태 API | ✅ 완료 | GET /analysis/stock/{code}/state |
+
+### Task 4-5: AI 추천 종목 ✅
+
+| # | 세부 Task | 상태 | 설명 |
+|---|-----------|------|------|
+| 4-5-1 | AIRecommender 서비스 | ✅ 완료 | BNF 전략 기반 스코어링 |
+| 4-5-2 | 스코어링 가중치 | ✅ 완료 | RSI 30%, MACD 20%, Volume 15%, Trend 20%, BB 15% |
+| 4-5-3 | 추천 API | ✅ 완료 | GET /analysis/recommend |
+| 4-5-4 | 매수/매도 필터 API | ✅ 완료 | GET /analysis/recommend/buy, /sell |
+| 4-5-5 | 단위/통합 테스트 | ✅ 완료 | 38 unit + 12 integration |
+
+### Task 4-6: 신호 강도 시각화 ✅
+
+| # | 세부 Task | 상태 | 설명 |
+|---|-----------|------|------|
+| 4-6-1 | SignalStrengthGauge | ✅ 완료 | SVG 반원형 게이지 |
+| 4-6-2 | IndicatorContribution | ✅ 완료 | 지표별 수평 바 차트 |
+| 4-6-3 | Analysis API 클라이언트 | ✅ 완료 | lib/api/analysis.ts |
+| 4-6-4 | Analysis 페이지 통합 | ✅ 완료 | app/analysis/page.tsx |
+| 4-6-5 | 프론트엔드 테스트 | ✅ 완료 | 8개 테스트 |
+
+### 검증 체크리스트 - Phase 4
+
+- [x] StockPrice 모델 생성 및 마이그레이션
+- [x] PriceHistoryService 수집/저장 동작
+- [x] BacktestEngine 시뮬레이션 동작
+- [x] 거래 비용 (수수료, 세금) 정확성
+- [x] 손절/익절 로직 동작
+- [x] 결과 지표 계산 정확성 (MDD, Sharpe 등)
+- [x] 백테스트 결과 저장/조회/삭제 API
+- [x] 시장 상태 분석 API (KOSPI/KOSDAQ)
+- [x] AI 추천 스코어링 로직
+- [x] 신호 강도 시각화 컴포넌트
+- [x] Backend 테스트 621개 통과
+- [x] Frontend 테스트 112개 통과
+
+### API 엔드포인트 (Phase 4)
+
+```
+# 백테스팅 API
+POST /api/v1/backtest/prices/sync     # 주가 데이터 동기화
+GET  /api/v1/backtest/prices/{code}   # 주가 조회
+POST /api/v1/backtest/run             # 백테스트 실행
+GET  /api/v1/backtest/results         # 결과 목록
+GET  /api/v1/backtest/results/{id}    # 결과 상세
+DELETE /api/v1/backtest/results/{id}  # 결과 삭제
+
+# 분석 API
+GET  /api/v1/analysis/market          # 시장 상태 (KOSPI/KOSDAQ)
+GET  /api/v1/analysis/market/{index}  # 개별 지수 상태
+GET  /api/v1/analysis/stock/{code}/state  # 종목 상태
+GET  /api/v1/analysis/recommend       # AI 추천 목록
+GET  /api/v1/analysis/recommend/buy   # 매수 추천만
+GET  /api/v1/analysis/recommend/sell  # 매도 추천만
+GET  /api/v1/analysis/stock/{code}/score  # 개별 종목 점수
+```
+
+### 미구현 항목 (백로그)
+
+| # | Task | 우선순위 | 설명 |
+|---|------|----------|------|
+| 4-B-1 | 섹터 분석 API | P3 | GET /analysis/sectors |
+| 4-B-2 | 백테스트 결과 UI | P3 | MetricsCards, EquityCurveChart, TradesTable, DrawdownChart |
+| 4-B-3 | 시장 상태 페이지 UI | P3 | Frontend 대시보드 통합 |
 
 ---
 
@@ -289,6 +381,7 @@ cat docs/plans/PROGRESS.md
 
 | 날짜 | 변경 내용 |
 |------|----------|
+| 2026-01-10 | Phase 4 완료 - Task 4-1~4-6 백테스팅 및 AI 분석 구현 |
 | 2026-01-10 | Phase 3 완료 - Task 3-2 AI Scanner 구현 + Backlog 3-5-8/10 AlertStore 구현 |
 | 2026-01-10 | Task 3-4 완료 - Slack Webhook 연동 구현 (SlackService + API 4개 + Frontend UI + 테스트 22개) |
 | 2026-01-10 | Task 3-5-7 완료 - Alert Expiry 구현 (5분 타임아웃 + 만료 메시지 + 테스트 5개) |
