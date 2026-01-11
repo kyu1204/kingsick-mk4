@@ -308,6 +308,7 @@ async def run_backtest(
         result=result_dict,
     )
     db.add(db_result)
+    await db.flush()
 
     for trade in result.trades:
         db_trade = BacktestTradeModel(
@@ -321,6 +322,8 @@ async def run_backtest(
             commission=trade.commission,
             tax=trade.tax,
             signal_reason=trade.signal_reason,
+            pnl=trade.pnl,
+            pnl_pct=trade.pnl_pct,
         )
         db.add(db_trade)
 
@@ -473,6 +476,8 @@ async def get_backtest_result(
                 commission=t.commission,
                 tax=t.tax,
                 signal_reason=t.signal_reason or "",
+                pnl=t.pnl or 0.0,
+                pnl_pct=t.pnl_pct or 0.0,
             )
             for t in db_trades
         ],

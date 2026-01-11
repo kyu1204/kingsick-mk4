@@ -97,7 +97,7 @@ class BNFStrategy:
             conditions_met.append("Golden cross confirmed")
 
         # Determine if buy signal should be triggered
-        # Need RSI oversold AND at least one other condition
+        # Need RSI oversold PLUS at least one confirming indicator
         is_buy = rsi_oversold and (volume_spike or below_lower_band)
 
         # Normalize confidence
@@ -181,7 +181,7 @@ class BNFStrategy:
             conditions_met.append("Death cross confirmed")
 
         # Determine if sell signal should be triggered
-        # Need RSI overbought AND at least one other condition
+        # Need RSI overbought PLUS at least one confirming indicator
         is_sell = rsi_overbought and (volume_decrease or above_upper_band)
 
         # Normalize confidence

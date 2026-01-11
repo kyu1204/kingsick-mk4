@@ -83,6 +83,8 @@ class BacktestTrade(Base):
     commission: Mapped[float] = mapped_column(Float, nullable=False)
     tax: Mapped[float] = mapped_column(Float, nullable=False)
     signal_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    pnl: Mapped[float | None] = mapped_column(Float, nullable=True, default=0.0)
+    pnl_pct: Mapped[float | None] = mapped_column(Float, nullable=True, default=0.0)
 
     backtest: Mapped["BacktestResult"] = relationship(
         "BacktestResult", back_populates="trades", foreign_keys=[backtest_id]
