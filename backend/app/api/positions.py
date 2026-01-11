@@ -11,7 +11,10 @@ Provides endpoints for:
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.auth import get_current_user
 from app.api.schemas import (
     BalanceResponse,
     DailyPriceResponse,
@@ -19,28 +22,48 @@ from app.api.schemas import (
     PositionSchema,
     StockPriceResponse,
 )
-from app.config import get_settings
+from app.database import get_db
+from app.models import User, UserApiKey
+from app.services.encryption import decrypt
 from app.services.kis_api import KISApiClient, KISApiError, Position
+from app.services.kis_token_cache import get_authenticated_kis_client
 
 router = APIRouter(prefix="/positions", tags=["positions"])
 
 
-def get_kis_client() -> KISApiClient | None:
-    """
-    Dependency to get KIS API client.
+async def get_kis_client_for_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> KISApiClient:
+    """Dependency to get authenticated KIS API client for the current user."""
+    result = await db.execute(select(UserApiKey).where(UserApiKey.user_id == current_user.id))
+    api_key = result.scalar_one_or_none()
 
-    Returns None if credentials are not configured.
-    """
-    settings = get_settings()
-    if not settings.kis_app_key or not settings.kis_app_secret:
-        return None
+    if not api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="KIS API credentials not configured. Please add your API key in Settings.",
+        )
 
-    return KISApiClient(
-        app_key=settings.kis_app_key,
-        app_secret=settings.kis_app_secret,
-        account_no=settings.kis_account_no,
-        is_mock=settings.kis_is_mock,
-    )
+    try:
+        app_key = decrypt(api_key.kis_app_key_encrypted)
+        app_secret = decrypt(api_key.kis_app_secret_encrypted)
+        account_no = decrypt(api_key.kis_account_no_encrypted)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to decrypt API credentials: {e}",
+        )
+
+    try:
+        return await get_authenticated_kis_client(
+            app_key=app_key,
+            app_secret=app_secret,
+            account_no=account_no,
+            is_mock=api_key.is_paper_trading,
+        )
+    except KISApiError as e:
+        raise HTTPException(status_code=502, detail=str(e))
 
 
 async def get_positions_from_api(client: KISApiClient) -> list[Position]:
@@ -48,34 +71,13 @@ async def get_positions_from_api(client: KISApiClient) -> list[Position]:
     return await client.get_positions()
 
 
-def _check_client(client: KISApiClient | None) -> None:
-    """Check if KIS client is available and raise HTTPException if not."""
-    if client is None:
-        raise HTTPException(
-            status_code=503,
-            detail="KIS API credentials not configured",
-        )
-
-
 @router.get("/", response_model=PositionListResponse)
 async def get_positions(
-    client: Annotated[KISApiClient | None, Depends(get_kis_client)],
+    client: Annotated[KISApiClient, Depends(get_kis_client_for_user)],
 ) -> PositionListResponse:
-    """
-    Get all current stock positions.
-
-    Returns:
-        PositionListResponse with list of positions
-
-    Raises:
-        HTTPException: If KIS API is not configured or API error occurs
-    """
-    _check_client(client)
-
     try:
-        async with client:  # type: ignore
-            await client.authenticate()  # type: ignore
-            positions = await client.get_positions()  # type: ignore
+        async with client:
+            positions = await client.get_positions()
 
             return PositionListResponse(
                 positions=[
@@ -97,23 +99,11 @@ async def get_positions(
 
 @router.get("/balance", response_model=BalanceResponse)
 async def get_balance(
-    client: Annotated[KISApiClient | None, Depends(get_kis_client)],
+    client: Annotated[KISApiClient, Depends(get_kis_client_for_user)],
 ) -> BalanceResponse:
-    """
-    Get account balance information.
-
-    Returns:
-        BalanceResponse with account balance details
-
-    Raises:
-        HTTPException: If KIS API is not configured or API error occurs
-    """
-    _check_client(client)
-
     try:
-        async with client:  # type: ignore
-            await client.authenticate()  # type: ignore
-            balance = await client.get_balance()  # type: ignore
+        async with client:
+            balance = await client.get_balance()
 
             return BalanceResponse(
                 deposit=balance.get("deposit", 0.0),
@@ -130,27 +120,11 @@ async def get_balance(
 @router.get("/price/{stock_code}", response_model=StockPriceResponse)
 async def get_stock_price(
     stock_code: str,
-    client: Annotated[KISApiClient | None, Depends(get_kis_client)],
+    client: Annotated[KISApiClient, Depends(get_kis_client_for_user)],
 ) -> StockPriceResponse:
-    """
-    Get current stock price.
-
-    Args:
-        stock_code: Stock code (e.g., "005930" for Samsung Electronics)
-        client: KIS API client
-
-    Returns:
-        StockPriceResponse with current price data
-
-    Raises:
-        HTTPException: If KIS API is not configured or API error occurs
-    """
-    _check_client(client)
-
     try:
-        async with client:  # type: ignore
-            await client.authenticate()  # type: ignore
-            price = await client.get_stock_price(stock_code)  # type: ignore
+        async with client:
+            price = await client.get_stock_price(stock_code)
 
             return StockPriceResponse(
                 code=price.code,
@@ -169,29 +143,12 @@ async def get_stock_price(
 @router.get("/daily-prices/{stock_code}", response_model=list[DailyPriceResponse])
 async def get_daily_prices(
     stock_code: str,
-    client: Annotated[KISApiClient | None, Depends(get_kis_client)],
+    client: Annotated[KISApiClient, Depends(get_kis_client_for_user)],
     count: int = Query(default=100, ge=1, le=500, description="Number of days to retrieve"),
 ) -> list[DailyPriceResponse]:
-    """
-    Get daily OHLCV data for a stock.
-
-    Args:
-        stock_code: Stock code (e.g., "005930" for Samsung Electronics)
-        client: KIS API client
-        count: Number of days to retrieve (default: 100, max: 500)
-
-    Returns:
-        List of DailyPriceResponse with historical price data
-
-    Raises:
-        HTTPException: If KIS API is not configured or API error occurs
-    """
-    _check_client(client)
-
     try:
-        async with client:  # type: ignore
-            await client.authenticate()  # type: ignore
-            daily_prices = await client.get_daily_prices(stock_code, count)  # type: ignore
+        async with client:
+            daily_prices = await client.get_daily_prices(stock_code, count)
 
             return [
                 DailyPriceResponse(

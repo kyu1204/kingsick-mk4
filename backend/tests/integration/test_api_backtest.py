@@ -6,6 +6,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.api.auth import get_current_user
+from app.api.dependencies import get_kis_client_for_user
 from app.database import get_db
 from app.main import app
 from app.models import User
@@ -38,6 +39,13 @@ def mock_db():
     db.refresh = AsyncMock()
     db.delete = AsyncMock()
     return db
+
+
+@pytest.fixture
+def mock_kis_client():
+    client = AsyncMock()
+    client.get_daily_prices = AsyncMock(return_value=[])
+    return client
 
 
 @pytest.fixture
@@ -112,9 +120,12 @@ class TestBacktestRunAPI:
             assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_run_backtest_invalid_dates(self, mock_user, mock_db, auth_headers):
+    async def test_run_backtest_invalid_dates(
+        self, mock_user, mock_db, mock_kis_client, auth_headers
+    ):
         app.dependency_overrides[get_current_user] = lambda: mock_user
         app.dependency_overrides[get_db] = lambda: mock_db
+        app.dependency_overrides[get_kis_client_for_user] = lambda: mock_kis_client
 
         try:
             async with AsyncClient(
@@ -136,9 +147,12 @@ class TestBacktestRunAPI:
             app.dependency_overrides.clear()
 
     @pytest.mark.asyncio
-    async def test_run_backtest_no_price_data(self, mock_user, mock_db, auth_headers):
+    async def test_run_backtest_no_price_data(
+        self, mock_user, mock_db, mock_kis_client, auth_headers
+    ):
         app.dependency_overrides[get_current_user] = lambda: mock_user
         app.dependency_overrides[get_db] = lambda: mock_db
+        app.dependency_overrides[get_kis_client_for_user] = lambda: mock_kis_client
 
         with patch("app.api.backtest.PriceHistoryService") as mock_service_class:
             mock_service = AsyncMock()
@@ -165,9 +179,12 @@ class TestBacktestRunAPI:
                 app.dependency_overrides.clear()
 
     @pytest.mark.asyncio
-    async def test_run_backtest_success(self, mock_user, mock_db, auth_headers, mock_stock_prices):
+    async def test_run_backtest_success(
+        self, mock_user, mock_db, mock_kis_client, auth_headers, mock_stock_prices
+    ):
         app.dependency_overrides[get_current_user] = lambda: mock_user
         app.dependency_overrides[get_db] = lambda: mock_db
+        app.dependency_overrides[get_kis_client_for_user] = lambda: mock_kis_client
 
         with patch("app.api.backtest.PriceHistoryService") as mock_service_class:
             mock_service = AsyncMock()

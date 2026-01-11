@@ -2,20 +2,25 @@
 
 Provides stock recommendations based on BNF strategy scoring.
 Analyzes stocks using technical indicators and generates buy/sell signals.
+
+Now uses KIS API for real-time price data instead of database.
 """
 
 import math
 from dataclasses import dataclass
 from datetime import date
 from enum import Enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.bnf_strategy import BNFStrategy
-from app.models.backtest import StockPrice
 from app.models.watchlist import WatchlistItem
 from app.services.indicator import IndicatorCalculator
+
+if TYPE_CHECKING:
+    from app.services.kis_api import KISApiClient
 
 
 class SignalStrength(str, Enum):
@@ -67,17 +72,18 @@ class NoStocksError(AIRecommenderError):
 
 
 class AIRecommender:
-    """AI-powered stock recommender.
-
-    Uses BNF strategy and technical indicators to score stocks
-    and generate buy/sell recommendations.
-    """
+    """AI-powered stock recommender using KIS API for real-time price data."""
 
     MIN_DATA_POINTS = 60
     LOOKBACK_PERIOD = 100
 
-    def __init__(self, db: AsyncSession) -> None:
+    def __init__(
+        self,
+        db: AsyncSession,
+        kis_client: "KISApiClient | None" = None,
+    ) -> None:
         self.db = db
+        self.kis_client = kis_client
         self.indicator = IndicatorCalculator()
         self.strategy = BNFStrategy()
 
@@ -177,11 +183,7 @@ class AIRecommender:
         return sell_signals[:top_n]
 
     async def _get_stock_codes(self, user_id: str | None) -> list[str]:
-        """Get stock codes to analyze.
-
-        If user_id provided, gets from user's watchlist.
-        Otherwise returns stocks with price data.
-        """
+        """Get stock codes from user's watchlist."""
         if user_id:
             query = select(WatchlistItem.stock_code).where(
                 WatchlistItem.user_id == user_id,
@@ -191,26 +193,24 @@ class AIRecommender:
             codes = list(result.scalars().all())
             if codes:
                 return codes
-
-        query = select(StockPrice.stock_code).distinct().limit(100)
-        result = await self.db.execute(query)
-        return list(result.scalars().all())
+        return []
 
     async def _get_price_data(
         self,
         stock_code: str,
         target_date: date,
-    ) -> list[StockPrice]:
-        """Get historical price data for stock."""
-        query = (
-            select(StockPrice)
-            .where(StockPrice.stock_code == stock_code)
-            .where(StockPrice.trade_date <= target_date)
-            .order_by(StockPrice.trade_date.asc())
-            .limit(self.LOOKBACK_PERIOD)
-        )
-        result = await self.db.execute(query)
-        return list(result.scalars().all())
+    ) -> list[dict[str, float | int | str]]:
+        """Get historical price data from KIS API."""
+        if not self.kis_client:
+            return []
+
+        try:
+            daily_prices = await self.kis_client.get_daily_prices(
+                stock_code, count=self.LOOKBACK_PERIOD
+            )
+            return daily_prices
+        except Exception:
+            return []
 
     async def _analyze_stock(
         self,
@@ -223,10 +223,14 @@ class AIRecommender:
         if len(prices) < self.MIN_DATA_POINTS:
             return None
 
-        close_prices = [p.close_price for p in prices]
-        volumes = [float(p.volume) for p in prices]
-        high_prices = [p.high_price for p in prices]
-        low_prices = [p.low_price for p in prices]
+        # KIS API returns data in reverse chronological order (newest first)
+        # Reverse to get oldest-first for indicator calculations
+        prices_sorted = list(reversed(prices))
+
+        close_prices = [float(p["close"]) for p in prices_sorted]
+        volumes = [float(p["volume"]) for p in prices_sorted]
+        high_prices = [float(p["high"]) for p in prices_sorted]
+        low_prices = [float(p["low"]) for p in prices_sorted]
 
         scores = self._calculate_indicator_scores(close_prices, volumes, high_prices, low_prices)
         total_score = self._calculate_total_score(scores)

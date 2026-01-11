@@ -372,15 +372,17 @@ class TestAnalyzeStock:
 
     @pytest.fixture
     def mock_price_data(self):
-        class MockStockPrice:
-            def __init__(self, idx):
-                self.close_price = 50000.0 + idx * 100
-                self.high_price = 51000.0 + idx * 100
-                self.low_price = 49000.0 + idx * 100
-                self.volume = 1000000
-                self.trade_date = date(2025, 1, 1)
-
-        return [MockStockPrice(i) for i in range(80)]
+        return [
+            {
+                "date": "20250101",
+                "open": 50000.0 + i * 100,
+                "high": 51000.0 + i * 100,
+                "low": 49000.0 + i * 100,
+                "close": 50000.0 + i * 100,
+                "volume": 1000000,
+            }
+            for i in range(80)
+        ]
 
     @pytest.mark.asyncio
     async def test_analyze_stock_success(self, recommender, mock_price_data):

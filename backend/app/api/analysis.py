@@ -11,9 +11,11 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user
+from app.api.dependencies import get_kis_client_for_user
 from app.database import get_db
 from app.models.user import User
 from app.services.ai_recommender import AIRecommender, StockRecommendation
+from app.services.kis_api import KISApiClient
 from app.services.market_analyzer import (
     InsufficientDataError,
     MarketAnalyzer,
@@ -273,6 +275,7 @@ def _convert_recommendation(rec: StockRecommendation) -> StockRecommendationResp
 async def get_recommendations(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    kis_client: Annotated[KISApiClient, Depends(get_kis_client_for_user)],
     top_n: Annotated[int, Query(ge=1, le=50)] = 10,
     target_date: date | None = None,
 ) -> RecommendationsResponse:
@@ -288,7 +291,7 @@ async def get_recommendations(
     Returns:
         RecommendationsResponse with ranked stock recommendations
     """
-    recommender = AIRecommender(db)
+    recommender = AIRecommender(db, kis_client=kis_client)
     recs = await recommender.get_recommendations(
         user_id=str(current_user.id),
         top_n=top_n,
@@ -306,6 +309,7 @@ async def get_recommendations(
 async def get_buy_signals(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    kis_client: Annotated[KISApiClient, Depends(get_kis_client_for_user)],
     top_n: Annotated[int, Query(ge=1, le=50)] = 10,
     target_date: date | None = None,
 ) -> RecommendationsResponse:
@@ -320,7 +324,7 @@ async def get_buy_signals(
     Returns:
         RecommendationsResponse with buy signals only
     """
-    recommender = AIRecommender(db)
+    recommender = AIRecommender(db, kis_client=kis_client)
     recs = await recommender.get_buy_signals(
         user_id=str(current_user.id),
         top_n=top_n,
@@ -338,6 +342,7 @@ async def get_buy_signals(
 async def get_sell_signals(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    kis_client: Annotated[KISApiClient, Depends(get_kis_client_for_user)],
     top_n: Annotated[int, Query(ge=1, le=50)] = 10,
     target_date: date | None = None,
 ) -> RecommendationsResponse:
@@ -352,7 +357,7 @@ async def get_sell_signals(
     Returns:
         RecommendationsResponse with sell signals only
     """
-    recommender = AIRecommender(db)
+    recommender = AIRecommender(db, kis_client=kis_client)
     recs = await recommender.get_sell_signals(
         user_id=str(current_user.id),
         top_n=top_n,
@@ -371,6 +376,7 @@ async def get_stock_score(
     stock_code: str,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    kis_client: Annotated[KISApiClient, Depends(get_kis_client_for_user)],
     target_date: date | None = None,
 ) -> StockRecommendationResponse:
     """Get AI score for a specific stock.
@@ -388,7 +394,7 @@ async def get_stock_score(
     Raises:
         404: Insufficient data for analysis
     """
-    recommender = AIRecommender(db)
+    recommender = AIRecommender(db, kis_client=kis_client)
     rec = await recommender.score_stock(stock_code, target_date)
 
     if rec is None:

@@ -10,11 +10,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user
+from app.api.dependencies import get_kis_client_for_user
 from app.database import get_db
 from app.models import User
 from app.models.backtest import BacktestResult as BacktestResultModel
 from app.models.backtest import BacktestTrade as BacktestTradeModel
 from app.services.backtest_engine import BacktestConfig, BacktestEngine
+from app.services.kis_api import KISApiClient
 from app.services.price_history import PriceHistoryError, PriceHistoryService
 
 router = APIRouter(prefix="/backtest", tags=["Backtest"])
@@ -207,6 +209,7 @@ async def run_backtest(
     request: BacktestRunRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    kis_client: Annotated[KISApiClient, Depends(get_kis_client_for_user)],
 ) -> BacktestResultResponse:
     if request.start_date >= request.end_date:
         raise HTTPException(
@@ -214,11 +217,25 @@ async def run_backtest(
             detail="start_date must be before end_date",
         )
 
-    price_service = PriceHistoryService(db)
+    price_service = PriceHistoryService(db, kis_client=kis_client)
 
-    price_data: dict[str, list[dict]] = {}
+    price_data: dict[str, list[dict[str, object]]] = {}
     for stock_code in request.stock_codes:
         prices = await price_service.get_prices(stock_code, request.start_date, request.end_date)
+
+        # If no prices found, try to sync from KIS API
+        if not prices:
+            try:
+                days_to_fetch = (request.end_date - request.start_date).days + 30
+                days_to_fetch = min(days_to_fetch, 365)
+                await price_service.fetch_and_store(stock_code, days=days_to_fetch)
+                prices = await price_service.get_prices(
+                    stock_code, request.start_date, request.end_date
+                )
+            except PriceHistoryError:
+                # If sync fails, continue without this stock
+                pass
+
         if prices:
             price_data[stock_code] = [
                 {
@@ -235,7 +252,7 @@ async def run_backtest(
     if not price_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No price data found for the specified stocks and date range",
+            detail="No price data found for the specified stocks and date range. Please check the stock codes and date range.",
         )
 
     config = BacktestConfig(

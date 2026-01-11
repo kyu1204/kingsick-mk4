@@ -8,6 +8,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.api.auth import get_current_user
+from app.api.dependencies import get_kis_client_for_user
 from app.database import get_db
 from app.main import app
 from app.models import User
@@ -43,6 +44,13 @@ def mock_db():
     db.commit = AsyncMock()
     db.refresh = AsyncMock()
     return db
+
+
+@pytest.fixture
+def mock_kis_client():
+    kis_client = MagicMock()
+    kis_client.get_daily_prices = AsyncMock(return_value=[])
+    return kis_client
 
 
 @pytest.fixture
@@ -450,9 +458,12 @@ class TestRecommendationsAPI:
             assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_get_recommendations_success(self, mock_user, mock_db, auth_headers, mock_recommendation):
+    async def test_get_recommendations_success(
+        self, mock_user, mock_db, mock_kis_client, auth_headers, mock_recommendation
+    ):
         app.dependency_overrides[get_current_user] = lambda: mock_user
         app.dependency_overrides[get_db] = lambda: mock_db
+        app.dependency_overrides[get_kis_client_for_user] = lambda: mock_kis_client
 
         with patch("app.api.analysis.AIRecommender") as MockRecommender:
             mock_instance = MockRecommender.return_value
@@ -480,9 +491,10 @@ class TestRecommendationsAPI:
                 app.dependency_overrides.clear()
 
     @pytest.mark.asyncio
-    async def test_get_recommendations_empty(self, mock_user, mock_db, auth_headers):
+    async def test_get_recommendations_empty(self, mock_user, mock_db, mock_kis_client, auth_headers):
         app.dependency_overrides[get_current_user] = lambda: mock_user
         app.dependency_overrides[get_db] = lambda: mock_db
+        app.dependency_overrides[get_kis_client_for_user] = lambda: mock_kis_client
 
         with patch("app.api.analysis.AIRecommender") as MockRecommender:
             mock_instance = MockRecommender.return_value
@@ -503,9 +515,12 @@ class TestRecommendationsAPI:
                 app.dependency_overrides.clear()
 
     @pytest.mark.asyncio
-    async def test_get_recommendations_with_top_n(self, mock_user, mock_db, auth_headers, mock_recommendation):
+    async def test_get_recommendations_with_top_n(
+        self, mock_user, mock_db, mock_kis_client, auth_headers, mock_recommendation
+    ):
         app.dependency_overrides[get_current_user] = lambda: mock_user
         app.dependency_overrides[get_db] = lambda: mock_db
+        app.dependency_overrides[get_kis_client_for_user] = lambda: mock_kis_client
 
         with patch("app.api.analysis.AIRecommender") as MockRecommender:
             mock_instance = MockRecommender.return_value
@@ -578,9 +593,12 @@ class TestBuySellSignalsAPI:
             assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_get_buy_signals_success(self, mock_user, mock_db, auth_headers, mock_buy_recommendation):
+    async def test_get_buy_signals_success(
+        self, mock_user, mock_db, mock_kis_client, auth_headers, mock_buy_recommendation
+    ):
         app.dependency_overrides[get_current_user] = lambda: mock_user
         app.dependency_overrides[get_db] = lambda: mock_db
+        app.dependency_overrides[get_kis_client_for_user] = lambda: mock_kis_client
 
         with patch("app.api.analysis.AIRecommender") as MockRecommender:
             mock_instance = MockRecommender.return_value
@@ -612,9 +630,12 @@ class TestBuySellSignalsAPI:
             assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_get_sell_signals_success(self, mock_user, mock_db, auth_headers, mock_sell_recommendation):
+    async def test_get_sell_signals_success(
+        self, mock_user, mock_db, mock_kis_client, auth_headers, mock_sell_recommendation
+    ):
         app.dependency_overrides[get_current_user] = lambda: mock_user
         app.dependency_overrides[get_db] = lambda: mock_db
+        app.dependency_overrides[get_kis_client_for_user] = lambda: mock_kis_client
 
         with patch("app.api.analysis.AIRecommender") as MockRecommender:
             mock_instance = MockRecommender.return_value
@@ -668,9 +689,12 @@ class TestStockScoreAPI:
             assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_get_stock_score_success(self, mock_user, mock_db, auth_headers, mock_stock_score):
+    async def test_get_stock_score_success(
+        self, mock_user, mock_db, mock_kis_client, auth_headers, mock_stock_score
+    ):
         app.dependency_overrides[get_current_user] = lambda: mock_user
         app.dependency_overrides[get_db] = lambda: mock_db
+        app.dependency_overrides[get_kis_client_for_user] = lambda: mock_kis_client
 
         with patch("app.api.analysis.AIRecommender") as MockRecommender:
             mock_instance = MockRecommender.return_value
@@ -694,9 +718,10 @@ class TestStockScoreAPI:
                 app.dependency_overrides.clear()
 
     @pytest.mark.asyncio
-    async def test_get_stock_score_not_found(self, mock_user, mock_db, auth_headers):
+    async def test_get_stock_score_not_found(self, mock_user, mock_db, mock_kis_client, auth_headers):
         app.dependency_overrides[get_current_user] = lambda: mock_user
         app.dependency_overrides[get_db] = lambda: mock_db
+        app.dependency_overrides[get_kis_client_for_user] = lambda: mock_kis_client
 
         with patch("app.api.analysis.AIRecommender") as MockRecommender:
             mock_instance = MockRecommender.return_value
@@ -715,11 +740,14 @@ class TestStockScoreAPI:
                 app.dependency_overrides.clear()
 
     @pytest.mark.asyncio
-    async def test_get_stock_score_with_date(self, mock_user, mock_db, auth_headers, mock_stock_score):
+    async def test_get_stock_score_with_date(
+        self, mock_user, mock_db, mock_kis_client, auth_headers, mock_stock_score
+    ):
         target_date = date.today() - timedelta(days=7)
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
         app.dependency_overrides[get_db] = lambda: mock_db
+        app.dependency_overrides[get_kis_client_for_user] = lambda: mock_kis_client
 
         with patch("app.api.analysis.AIRecommender") as MockRecommender:
             mock_instance = MockRecommender.return_value

@@ -56,9 +56,9 @@ export function MetricsCards({ result }: MetricsCardsProps) {
       
       <MetricItem
         title="승률"
-        value={formatPercent(result.win_rate * 100)}
+        value={formatPercent(result.win_rate)}
         subValue={`${result.winning_trades}승 / ${result.losing_trades}패`}
-        trend={result.win_rate >= 0.5 ? 'up' : 'down'}
+        trend={result.win_rate >= 50 ? 'up' : 'down'}
       />
 
       <MetricItem
@@ -89,13 +89,13 @@ export function MetricsCards({ result }: MetricsCardsProps) {
 
       <MetricItem
         title="평균 수익"
-        value={formatPercent(result.avg_win)}
+        value={formatKRW(result.avg_win)}
         trend="up"
       />
 
       <MetricItem
         title="평균 손실"
-        value={formatPercent(result.avg_loss)}
+        value={formatKRW(result.avg_loss)}
         trend="down"
       />
     </div>

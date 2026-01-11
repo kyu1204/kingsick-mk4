@@ -141,16 +141,24 @@ class KISApiClient:
         Args:
             app_key: API app key
             app_secret: API app secret
-            account_no: Account number (format: XXXXXXXX-XX)
+            account_no: Account number (format: XXXXXXXX-XX or XXXXXXXXXX)
             is_mock: True for paper trading, False for real trading
         """
         self._app_key = app_key
         self._app_secret = app_secret
-        self._account_no = account_no
+        self._account_no = self._normalize_account_no(account_no)
         self._is_mock = is_mock
         self._base_url = self.MOCK_BASE_URL if is_mock else self.REAL_BASE_URL
         self._access_token: str | None = None
         self._http_client = httpx.AsyncClient(timeout=30.0)
+
+    @staticmethod
+    def _normalize_account_no(account_no: str) -> str:
+        """Normalize account number to XXXXXXXX-XX format."""
+        account_no = account_no.replace("-", "").strip()
+        if len(account_no) == 10:
+            return f"{account_no[:8]}-{account_no[8:]}"
+        return account_no
 
     async def __aenter__(self) -> "KISApiClient":
         """Async context manager entry."""
@@ -233,11 +241,11 @@ class KISApiClient:
             return True
         return False
 
-    async def authenticate(self) -> bool:
+    async def authenticate(self) -> None:
         """Obtain OAuth access token.
 
-        Returns:
-            True if authentication successful, False otherwise
+        Raises:
+            KISApiError: If authentication fails
         """
         url = f"{self._base_url}/oauth2/tokenP"
         data = {
@@ -252,13 +260,18 @@ class KISApiClient:
 
             if response.status_code == 200 and "access_token" in result:
                 self._access_token = result["access_token"]
-                return True
-            else:
-                self._access_token = None
-                return False
-        except Exception:
+                return
+
             self._access_token = None
-            return False
+            error_msg = (
+                result.get("error_description")
+                or result.get("msg1")
+                or f"HTTP {response.status_code}"
+            )
+            raise KISApiError(f"Authentication failed: {error_msg}")
+        except httpx.HTTPError as e:
+            self._access_token = None
+            raise KISApiError(f"Authentication network error: {e}") from e
 
     def _ensure_authenticated(self) -> None:
         """Ensure client is authenticated.
@@ -341,24 +354,36 @@ class KISApiClient:
     ) -> list[dict[str, float | int | str]]:
         """Get daily OHLCV data for technical analysis.
 
+        Uses the 국내주식기간별시세 API (FHKST03010100) which supports up to 100 days
+        per request with date range specification. This is preferred over
+        FHKST01010400 which only returns 30 days.
+
         Args:
             stock_code: Stock code
-            count: Number of days to retrieve (default: 100)
+            count: Number of days to retrieve (default: 100, max: 100 per request)
 
         Returns:
-            List of daily OHLCV data dictionaries
+            List of daily OHLCV data dictionaries (oldest first for technical analysis)
 
         Raises:
             KISApiError: On API error or if not authenticated
         """
+        from datetime import datetime, timedelta
+
         self._ensure_authenticated()
 
-        tr_id = "FHKST01010400"
-        url = f"{self._base_url}/uapi/domestic-stock/v1/quotations/inquire-daily-price"
+        tr_id = "FHKST03010100"
+        url = f"{self._base_url}/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice"
         headers = self._get_headers(tr_id)
+
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=count + 50)
+
         params = {
             "FID_COND_MRKT_DIV_CODE": "J",
             "FID_INPUT_ISCD": stock_code,
+            "FID_INPUT_DATE_1": start_date.strftime("%Y%m%d"),
+            "FID_INPUT_DATE_2": end_date.strftime("%Y%m%d"),
             "FID_PERIOD_DIV_CODE": "D",
             "FID_ORG_ADJ_PRC": "0",
         }

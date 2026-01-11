@@ -51,6 +51,26 @@ class TestKISApiClientInit:
         assert client._is_mock is False
         assert client._base_url == "https://openapi.koreainvestment.com:9443"
 
+    def test_init_normalizes_account_no_without_hyphen(self):
+        """Account number without hyphen should be normalized to XXXXXXXX-XX format."""
+        client = KISApiClient(
+            app_key="test_key",
+            app_secret="test_secret",
+            account_no="1234567801",
+        )
+
+        assert client._account_no == "12345678-01"
+
+    def test_init_preserves_account_no_with_hyphen(self):
+        """Account number with hyphen should be preserved."""
+        client = KISApiClient(
+            app_key="test_key",
+            app_secret="test_secret",
+            account_no="12345678-01",
+        )
+
+        assert client._account_no == "12345678-01"
+
 
 class TestAuthentication:
     """Tests for OAuth authentication."""
@@ -77,13 +97,12 @@ class TestAuthentication:
         with patch.object(client, "_http_client") as mock_http:
             mock_http.post = AsyncMock(return_value=mock_response)
 
-            result = await client.authenticate()
+            await client.authenticate()
 
-            assert result is True
             assert client._access_token == "test_access_token"
 
-    async def test_authentication_failure(self, client):
-        """OAuth authentication should return False on failure."""
+    async def test_authentication_failure_raises_exception(self, client):
+        """OAuth authentication should raise KISApiError with details on failure."""
         mock_response = MagicMock()
         mock_response.status_code = 401
         mock_response.json.return_value = {
@@ -93,9 +112,38 @@ class TestAuthentication:
         with patch.object(client, "_http_client") as mock_http:
             mock_http.post = AsyncMock(return_value=mock_response)
 
-            result = await client.authenticate()
+            with pytest.raises(KISApiError) as exc_info:
+                await client.authenticate()
 
-            assert result is False
+            assert "Invalid credentials" in str(exc_info.value) or "401" in str(exc_info.value)
+            assert client._access_token is None
+
+    async def test_authentication_api_error_response(self, client):
+        """OAuth authentication should raise KISApiError on API error response."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "msg1": "앱키가 유효하지 않습니다",
+        }
+
+        with patch.object(client, "_http_client") as mock_http:
+            mock_http.post = AsyncMock(return_value=mock_response)
+
+            with pytest.raises(KISApiError) as exc_info:
+                await client.authenticate()
+
+            assert "앱키가 유효하지 않습니다" in str(exc_info.value)
+            assert client._access_token is None
+
+    async def test_authentication_network_error_raises_exception(self, client):
+        """OAuth authentication should raise KISApiError on network error."""
+        with patch.object(client, "_http_client") as mock_http:
+            mock_http.post = AsyncMock(side_effect=httpx.ConnectError("Connection failed"))
+
+            with pytest.raises(KISApiError) as exc_info:
+                await client.authenticate()
+
+            assert "Connection" in str(exc_info.value) or "network" in str(exc_info.value).lower()
             assert client._access_token is None
 
 

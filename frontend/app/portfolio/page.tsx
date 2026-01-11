@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Loader2, AlertCircle, Wallet } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth';
 import { positionsApi, PositionSchema, BalanceResponse } from '@/lib/api/positions';
+import { ApiError } from '@/lib/api/client';
 
 export default function PortfolioPage() {
   const [positions, setPositions] = useState<PositionSchema[]>([]);
@@ -28,7 +29,13 @@ export default function PortfolioPage() {
     } catch (err) {
       console.error('Failed to fetch portfolio data:', err);
       setPositions([]);
-      setError('KIS API가 설정되지 않았습니다. 설정에서 API 키를 등록해주세요.');
+      if (err instanceof ApiError && err.status === 503) {
+        setError('KIS API가 설정되지 않았습니다. 설정에서 API 키를 등록해주세요.');
+      } else if (err instanceof ApiError) {
+        setError(`KIS API 오류: ${err.message}`);
+      } else {
+        setError('포트폴리오 데이터를 가져오는데 실패했습니다.');
+      }
     } finally {
       setIsLoading(false);
     }
