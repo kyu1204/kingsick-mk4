@@ -125,9 +125,13 @@ class KISApiClient:
     # Token expired error codes
     TOKEN_EXPIRED_CODES = {"EGW00123", "EGW00121"}
 
+    # Rate limit error codes (초당 거래건수 초과)
+    RATE_LIMIT_CODES = {"EGW00201"}
+
     # Maximum retry attempts for network errors
     MAX_RETRIES = 3
     RETRY_DELAY = 1.0  # seconds
+    RATE_LIMIT_DELAY = 1.0  # seconds to wait on rate limit
 
     def __init__(
         self,
@@ -241,6 +245,11 @@ class KISApiClient:
             return True
         return False
 
+    def _is_rate_limited(self, response_data: dict) -> bool:  # type: ignore[type-arg]
+        msg_cd = response_data.get("msg_cd", "")
+        msg1 = response_data.get("msg1", "")
+        return msg_cd in self.RATE_LIMIT_CODES or "초당 거래건수" in msg1
+
     async def authenticate(self) -> None:
         """Obtain OAuth access token.
 
@@ -310,6 +319,14 @@ class KISApiClient:
         # Check for token expiration and retry
         if await self._check_and_refresh_token(data):
             headers = self._get_headers(tr_id)
+            response = await self._request_with_retry("GET", url, headers=headers, params=params)
+            data = response.json()
+
+        # Check for rate limit and retry
+        for _ in range(self.MAX_RETRIES):
+            if not self._is_rate_limited(data):
+                break
+            await asyncio.sleep(self.RATE_LIMIT_DELAY)
             response = await self._request_with_retry("GET", url, headers=headers, params=params)
             data = response.json()
 
@@ -394,6 +411,14 @@ class KISApiClient:
         # Check for token expiration and retry
         if await self._check_and_refresh_token(data):
             headers = self._get_headers(tr_id)
+            response = await self._request_with_retry("GET", url, headers=headers, params=params)
+            data = response.json()
+
+        # Check for rate limit and retry
+        for _ in range(self.MAX_RETRIES):
+            if not self._is_rate_limited(data):
+                break
+            await asyncio.sleep(self.RATE_LIMIT_DELAY)
             response = await self._request_with_retry("GET", url, headers=headers, params=params)
             data = response.json()
 
@@ -533,6 +558,14 @@ class KISApiClient:
             response = await self._request_with_retry("GET", url, headers=headers, params=params)
             data = response.json()
 
+        # Check for rate limit and retry
+        for _ in range(self.MAX_RETRIES):
+            if not self._is_rate_limited(data):
+                break
+            await asyncio.sleep(self.RATE_LIMIT_DELAY)
+            response = await self._request_with_retry("GET", url, headers=headers, params=params)
+            data = response.json()
+
         if data.get("rt_cd") != "0":
             raise KISApiError(data.get("msg1", "Unknown API error"))
 
@@ -597,6 +630,14 @@ class KISApiClient:
         # Check for token expiration and retry
         if await self._check_and_refresh_token(data):
             headers = self._get_headers(tr_id)
+            response = await self._request_with_retry("GET", url, headers=headers, params=params)
+            data = response.json()
+
+        # Check for rate limit and retry
+        for _ in range(self.MAX_RETRIES):
+            if not self._is_rate_limited(data):
+                break
+            await asyncio.sleep(self.RATE_LIMIT_DELAY)
             response = await self._request_with_retry("GET", url, headers=headers, params=params)
             data = response.json()
 
