@@ -32,38 +32,8 @@ interface DashboardData {
   selectedStock: string | null;
 }
 
-/**
- * Generate mock portfolio data based on current balance.
- * In Phase 4, this will be replaced with actual historical data.
- */
-function generateMockPortfolioData(balance: BalanceResponse | null): PortfolioDataPoint[] {
-  if (!balance) return [];
-
-  const data: PortfolioDataPoint[] = [];
-  const today = new Date();
-  const baseValue = balance.net_worth;
-
-  // Generate 30 days of mock data with realistic fluctuations
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-
-    // Create some variance (within +/- 5% of current value)
-    const variance = (Math.random() - 0.5) * 0.1;
-    const dayValue = baseValue * (1 - i * 0.001 + variance);
-
-    data.push({
-      date: date.toISOString().split('T')[0],
-      value: Math.round(dayValue),
-    });
-  }
-
-  // Ensure the last point matches current net worth
-  if (data.length > 0) {
-    data[data.length - 1].value = baseValue;
-  }
-
-  return data;
+function getPortfolioChartData(): PortfolioDataPoint[] {
+  return [];
 }
 
 /**
@@ -216,10 +186,9 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Generate portfolio chart data
   const portfolioChartData = useMemo(
-    () => generateMockPortfolioData(data.balance),
-    [data.balance]
+    () => getPortfolioChartData(),
+    []
   );
 
   // Convert daily prices for stock chart

@@ -4,61 +4,19 @@ import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Loader2, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Loader2, AlertCircle, Wallet } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth';
 import { positionsApi, PositionSchema, BalanceResponse } from '@/lib/api/positions';
-
-// Mock data for when KIS API is not configured
-const mockPositions: PositionSchema[] = [
-  {
-    stock_code: '005930',
-    stock_name: 'Samsung Electronics',
-    quantity: 150,
-    avg_price: 70500,
-    current_price: 72500,
-    profit_loss: 300000,
-    profit_loss_rate: 2.84,
-  },
-  {
-    stock_code: '035420',
-    stock_name: 'NAVER',
-    quantity: 50,
-    avg_price: 210000,
-    current_price: 215500,
-    profit_loss: 275000,
-    profit_loss_rate: 2.62,
-  },
-  {
-    stock_code: '035720',
-    stock_name: 'Kakao',
-    quantity: 200,
-    avg_price: 55000,
-    current_price: 52300,
-    profit_loss: -540000,
-    profit_loss_rate: -4.91,
-  },
-  {
-    stock_code: '006400',
-    stock_name: 'Samsung SDI',
-    quantity: 30,
-    avg_price: 420000,
-    current_price: 438500,
-    profit_loss: 555000,
-    profit_loss_rate: 4.40,
-  },
-];
 
 export default function PortfolioPage() {
   const [positions, setPositions] = useState<PositionSchema[]>([]);
   const [balance, setBalance] = useState<BalanceResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isMockData, setIsMockData] = useState(false);
 
   const fetchPortfolioData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    setIsMockData(false);
 
     try {
       const [positionsRes, balanceRes] = await Promise.all([
@@ -69,10 +27,8 @@ export default function PortfolioPage() {
       setBalance(balanceRes);
     } catch (err) {
       console.error('Failed to fetch portfolio data:', err);
-      // Use mock data if KIS API is not configured (503 error)
-      setPositions(mockPositions);
-      setIsMockData(true);
-      setError('KIS API가 설정되지 않아 샘플 데이터를 표시합니다.');
+      setPositions([]);
+      setError('KIS API가 설정되지 않았습니다. 설정에서 API 키를 등록해주세요.');
     } finally {
       setIsLoading(false);
     }
@@ -110,8 +66,8 @@ export default function PortfolioPage() {
             </p>
           </div>
 
-          {/* Warning for mock data */}
-          {isMockData && error && (
+          {/* Warning for API not configured */}
+          {error && (
             <div className="flex items-center gap-2 p-4 bg-yellow-500/10 border border-yellow-500/50 rounded-lg">
               <AlertCircle className="h-5 w-5 text-yellow-500" />
               <p className="text-sm text-yellow-500">{error}</p>
@@ -180,36 +136,44 @@ export default function PortfolioPage() {
                 </div>
 
                 {/* Table Body */}
-                {positions.map((pos) => (
-                  <div
-                    key={pos.stock_code}
-                    className="grid grid-cols-7 gap-4 items-center py-3 border-b border-border/50 hover:bg-accent/50 rounded-lg px-2 -mx-2 transition-colors"
-                  >
-                    <div className="font-mono text-sm">{pos.stock_code}</div>
-                    <div className="font-medium">{pos.stock_name}</div>
-                    <div className="text-right">{pos.quantity}</div>
-                    <div className="text-right">{pos.avg_price.toLocaleString('ko-KR')}</div>
-                    <div className="text-right font-medium">{pos.current_price.toLocaleString('ko-KR')}</div>
-                    <div className={`text-right ${pos.profit_loss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      <div className="flex items-center justify-end gap-1">
-                        {pos.profit_loss >= 0 ? (
-                          <TrendingUp className="h-4 w-4" />
-                        ) : (
-                          <TrendingDown className="h-4 w-4" />
-                        )}
-                        {pos.profit_loss >= 0 ? '+' : ''}{pos.profit_loss.toLocaleString('ko-KR')}
+                {positions.length > 0 ? (
+                  positions.map((pos) => (
+                    <div
+                      key={pos.stock_code}
+                      className="grid grid-cols-7 gap-4 items-center py-3 border-b border-border/50 hover:bg-accent/50 rounded-lg px-2 -mx-2 transition-colors"
+                    >
+                      <div className="font-mono text-sm">{pos.stock_code}</div>
+                      <div className="font-medium">{pos.stock_name}</div>
+                      <div className="text-right">{pos.quantity}</div>
+                      <div className="text-right">{pos.avg_price.toLocaleString('ko-KR')}</div>
+                      <div className="text-right font-medium">{pos.current_price.toLocaleString('ko-KR')}</div>
+                      <div className={`text-right ${pos.profit_loss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        <div className="flex items-center justify-end gap-1">
+                          {pos.profit_loss >= 0 ? (
+                            <TrendingUp className="h-4 w-4" />
+                          ) : (
+                            <TrendingDown className="h-4 w-4" />
+                          )}
+                          {pos.profit_loss >= 0 ? '+' : ''}{pos.profit_loss.toLocaleString('ko-KR')}
+                        </div>
+                        <div className="text-xs">
+                          ({pos.profit_loss >= 0 ? '+' : ''}{pos.profit_loss_rate.toFixed(2)}%)
+                        </div>
                       </div>
-                      <div className="text-xs">
-                        ({pos.profit_loss >= 0 ? '+' : ''}{pos.profit_loss_rate.toFixed(2)}%)
+                      <div className="text-center">
+                        <Badge variant={pos.profit_loss >= 0 ? 'profit' : 'loss'}>
+                          {pos.profit_loss >= 0 ? '이익' : '손실'}
+                        </Badge>
                       </div>
                     </div>
-                    <div className="text-center">
-                      <Badge variant={pos.profit_loss >= 0 ? 'profit' : 'loss'}>
-                        {pos.profit_loss >= 0 ? '이익' : '손실'}
-                      </Badge>
-                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                    <Wallet className="h-12 w-12 mb-4 opacity-50" />
+                    <p className="text-lg font-medium">보유 종목이 없습니다</p>
+                    <p className="text-sm">거래를 시작하면 여기에 포지션이 표시됩니다.</p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
